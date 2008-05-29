@@ -1,0 +1,7 @@
+These are the config files from my home dir.
+
+Install with
+    ./install
+
+This creates symlinks in the home dir, e.g. $HOME/.vimrc pointing to
+.../dot/vimrc.
