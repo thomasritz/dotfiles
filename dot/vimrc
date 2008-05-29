@@ -1,0 +1,152 @@
+let mapleader = ","
+set nocompatible    " Use Vim defaults (much better!)
+set noedcompatible
+set bs=2            " allow backspacing over everything in insert mode
+set ai              " always set autoindenting on
+set tw=0
+set viminfo='20,\"50    " read/write a .viminfo file, don't store more
+                        " than 50 lines of register
+"If you want to disable the screen switching, and you don't want to
+"change your termcap, you can add these lines to your .vimrc:
+"set t_ti= t_te=
+
+set cmdheight=2     " height of the command line
+set background=light
+set vb              " use visual bell instead of a sound
+set t_vb=
+set makeprg=make    " use make instead of make -k
+cabb mkae make      " typo correction ;-)
+set title           " set the window title
+set autowriteall
+set autoread
+set showmatch
+set showcmd
+set showfulltag
+
+set scrolloff=4
+set hidden
+set tabstop=4
+set shiftwidth=4
+set expandtab
+set softtabstop=4
+set ruler
+set laststatus=2
+set ignorecase
+set smartcase
+" set number
+set wrap
+" set verbose=9
+set whichwrap=b,
+set confirm
+"set magic
+set encoding=utf-8
+set fileencodings=ucs-bom,utf-8,default,latin1
+set errorformat=%f:%l:%c:%t:%m
+set shell=/bin/sh
+"set shellpipe=2>&1\|$HOME/bin/ccfilter.tcl\>
+set wildignore=*.o,*.pyc,*.cla
+set wildmode=longest,list
+set modeline
+"set digraph
+set listchars=tab:»\ ,extends:¤
+"set listchars=eol:$,tab:»·,trail:·
+set list
+"set virtualedit=all
+
+" delete trailing spaces on write
+"autocmd! BufWritePre * ks|execute "%s/\\s\\+$//ge"|'
+
+augroup filetype
+    " override the default filetype matlab for *.m
+    au! BufRead,BufNewFile,BufEnter *.m
+    autocmd BufRead,BufNewFile,BufEnter *.m   set ft=objc cindent
+    autocmd BufRead,BufNewFile,BufEnter *.cpp   set cindent
+
+    autocmd BufRead,BufNewFile,BufEnter *.tmpl set ft=html
+
+    autocmd BufRead,BufNewFile,BufEnter *.page set ft=yaml
+    "autocmd BufRead,BufNewFile,BufEnter *.layout set ft=eruby
+    "au! BufRead,BufNewFile *.rake         set filetype=ruby 
+    au! BufRead,BufNewFile Capfile        set filetype=ruby 
+    au! BufRead,BufNewFile *.haml         set filetype=haml 
+augroup END
+
+augroup syntax
+    au! FileType matlab     " do nothing
+    "au! FileType objc       source $VIM/vim61/syntax/objc.vim
+    au! FileType mail       set tw=72
+    au! FileType ruby       set tabstop=2 shiftwidth=2 softtabstop=2
+    au! FileType yaml       set tabstop=2 shiftwidth=2 softtabstop=2
+    au! FileType haml       set tabstop=2 shiftwidth=2 softtabstop=2
+augroup END
+
+augroup highlight
+    " let be + and - bold instead of underlined
+    autocmd BufRead,BufNewFile *.m   hi link objcFactMethod Operator
+    autocmd BufRead,BufNewFile *.m   hi link objcInstMethod Operator
+    autocmd BufReadPost,BufNewFile,BufEnter *.tcl hi Statement term=NONE ctermfg=0
+augroup END
+
+augroup cprog
+  au!
+  " When starting to edit a file:
+  "   For *.c and *.h files set formatting of comments and set C-indenting on.
+  "   For other files switch it off.
+  "   Don't change the order, it's important that the line with * comes first.
+  autocmd BufRead *       set formatoptions=tcq nocindent comments&
+  autocmd BufRead,BufEnter *.c,*.h,*.m set formatoptions=croql cindent comments=sr:/*,mb:*,el:*/,:// makeprg=make\ -k
+  autocmd BufRead,BufEnter *.java set formatoptions=croql
+  autocmd BufRead,BufEnter *.java set cindent comments=sr:/*,mb:*,el:*/,://
+  autocmd BufRead,BufEnter *.java set makeprg=make
+augroup END
+
+augroup html
+  au!
+  autocmd BufRead,BufEnter *.inc,*.php set ft=php
+  autocmd BufRead,BufEnter *.inc,*.php set tabstop=4 shiftwidth=4 softtabstop=4
+  autocmd BufRead,BufEnter *.inc,*.php syntax sync fromstart
+  autocmd BufLeave *.inc,*.php set tabstop=4 shiftwidth=4 softtabstop=4
+
+  autocmd BufRead,BufEnter *.rhtml,*.html,*.htm set tabstop=2 shiftwidth=2 softtabstop=2
+  autocmd BufLeave *.rhtml,*.html,*.htm set tabstop=2 shiftwidth=2 softtabstop=2
+augroup END
+
+autocmd! BufEnter Makefile* set noexpandtab tw=0
+autocmd! BufLeave Makefile* set expandtab
+autocmd! BufRead,BufNewFile *tcl set expandtab nocindent
+"autocmd BufEnter *.ini :syntax clear
+"autocmd BufLeave *.ini :syntax on
+
+set incsearch
+
+syntax on
+syntax sync fromstart
+set hlsearch
+
+filetype on           " Enable filetype detection
+filetype indent on    " Enable filetype-specific indenting
+filetype plugin on    " Enable filetype-specific plugins
+
+vnoremap p <Esc>:let current_reg = @0<CR>gvdi<C-R>=current_reg<CR><Esc>
+vmap / y/<C-R>"<CR>
+set wildmenu
+
+" Don't use Ex mode, use Q for formatting
+map Q gq
+
+" My mappings
+map <C-PageUp> :bp<CR>
+map <C-PageDown> :bn<CR>
+map <C-p> :bp<CR>
+map <C-n> :bn<CR>
+map <F5> :wa<CR>
+map <Leader><F2> :cp<CR>
+map <Leader><F3> :cn<CR>
+map <F7> :bd<CR>
+runtime ftplugin/man.vim
+
+highlight DiffAdd term=standout ctermfg=0 ctermbg=3
+highlight Todo term=standout ctermfg=4 ctermbg=9
+
+map j gj
+map k gk
