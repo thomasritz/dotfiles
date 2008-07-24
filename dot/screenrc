@@ -7,5 +7,4 @@ terminfo screen 'AF=\E[3%p1%dm:AB=\E[4%p1%dm'
 termcap  vt100 'AF=\E[3%dm:AB=\E[4%dm'
 terminfo vt100 'AF=\E[3%p1%dm:AB=\E[4%p1%dm'
 defutf8 on
-altscreen on
 ignorecase on
