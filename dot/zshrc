@@ -26,7 +26,7 @@ precmd() {
 
 export GREP_OPTIONS="--color"
 export EDITOR=vim
-export LESS="-R -M --shift 5 -F"
+export LESS="-R -M --shift 5"
 
 
 #
