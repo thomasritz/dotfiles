@@ -1,6 +1,6 @@
 defscrollback 10000
 startup_message off
-caption always "%{= kw}%-w%{= BW}%n %t%{-}%+w %-= @%H - %LD %d. %LM - %c:%s"
+caption always "%{= kw}%-w%{= BW}%n %t%{-}%+w %-= @%H (%Y-%m-%d %c:%s) (%l)"
 caption always
 termcap  screen 'AF=\E[3%dm:AB=\E[4%dm'
 terminfo screen 'AF=\E[3%p1%dm:AB=\E[4%p1%dm'
