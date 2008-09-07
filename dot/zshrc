@@ -1,164 +1,18 @@
-autoload -U compinit
-compinit
+autoload -U compinit zrecompile
 
-zmodload -a zsh/stat stat
-zmodload -a zsh/zpty zpty
-zmodload -a zsh/zprof zprof
-zmodload -ap zsh/mapfile mapfile
+zsh_cache=${HOME}/.zsh_cache
+mkdir -p $zsh_cache
 
-#
-# Window title
-#
+if [ $UID -eq 0 ]; then
+    compinit
+else
+    compinit -d $zsh_cache/zcomp-$HOST
+    for f in ~/.zshrc $zsh_cache/zcomp-$HOST; do
+        zrecompile -p $f && rm -f $f.zwc.old
+    done
+fi
 
-# precmd is executed before each prompt
-precmd() {
-    [[ -t 1 ]] || return
-    case $TERM in
-        *xterm*|rxvt|(dt|k|E)term) print -Pn "\e]2;$USER@$HOSTNAME:%~\a"
-        ;;
-    esac
-}
-
-
-#
-# Environment variables
-#
-
-export GREP_OPTIONS="--color"
-export EDITOR=vim
-export LESS="-R -M --shift 5"
-
-
-#
-# Prompt
-#
-
-# left prompt:
-PS1="%B%U%n@%m:%2~%(!.#.%%)%u%b "
-#PS1="%n@%m:%2~ > "
-#PS1="%{[33;02m%}%n@%m%{[0m%}:%2~ %(!.#.%%) "
-
-# right prompt:
-#unset RPS1
-#RPS1="%D{%a %Y-%m-%d %T}"
-#RPS1="%D{%a %m-%d %T}"
-#RPS1="%B%U%D{%T}%u%b"
-
-
-#
-# Aliases
-#
-
-unalias -m '*'
-alias :q='exit'
-alias :e='vim'
-alias :n='vim'
-alias l='ls -lF'
-alias la='ls -laF'
-alias ll='ls -lF'
-alias lh='ls -lhF'
-alias ls="ls -F"
-alias lsd='ls -ld *(-/DN)'      # List only dirs and symlinks that point to dirs
-alias lsa='ls -ld .*'           # List only file beginning with "."
-alias mv='nocorrect mv'         # no spelling correction on mv
-alias cp='nocorrect cp'         # no spelling correction on cp
-alias mkdir='nocorrect mkdir'   # no spelling correction on mkdir
-alias -- +=pushd
-alias -- -=popd
-alias j=jobs
-alias git='nocorrect git'
-alias gst='nocorrect git st'
-
-
-#
-# Zsh options
-#
-
-unsetopt bg_nice
-unsetopt autoparamslash
-setopt auto_menu
-setopt auto_list
-setopt complete_in_word
 setopt extended_glob
-setopt nobeep
-setopt auto_pushd
-setopt pushd_silent
-setopt pushd_to_home
-setopt long_list_jobs
-setopt notify
-setopt auto_cd
-setopt cdable_vars
-setopt correct correctall recexact autoresume
-setopt pushdminus
-setopt rcquotes 
-
-HISTFILE=$HOME/.zsh_history
-HISTSIZE=10000
-SAVEHIST=1000
-setopt histignoredups
-
-
-#
-# Completion Styles
-# (most of them are taken from third party. don't ask me what they are doing.)
-#
-
-# put your hostname tab completion in $HOME/.hosts, e.g.,
-# zstyle '*' hosts localhost example.com foobar.com
-test -f $HOME/.hosts && source $HOME/.hosts
-
-# list of completers to use
-zstyle ':completion:*::::' completer _expand _complete _ignored _approximate
-
-# allow one error for every three characters typed in approximate completer
-zstyle -e ':completion:*:approximate:*' max-errors 'reply=( $(( ($#PREFIX+$#SUFFIX)/3 )) numeric )'
-    
-# insert all expansions for expand completer
-zstyle ':completion:*:expand:*' tag-order all-expansions
-
-# formatting and messages
-zstyle ':completion:*' verbose yes
-zstyle ':completion:*:descriptions' format '%B%d%b'
-zstyle ':completion:*:messages' format '%d'
-zstyle ':completion:*:warnings' format 'No matches for: %d'
-zstyle ':completion:*:corrections' format '%B%d (errors: %e)%b'
-zstyle ':completion:*' group-name ''
-
-# match uppercase from lowercase
-#zstyle ':completion:*' matcher-list 'm:{a-z}={A-Z}'
-
-# offer indexes before parameters in subscripts
-zstyle ':completion:*:*:-subscript-:*' tag-order indexes parameters
-
-# Filename suffixes to ignore during completion (except after rm command)
-zstyle ':completion:*:*:(^rm):*:*files' ignored-patterns '*?.o' '*?~' '*?.old'
-
-# ignore completion functions (until the _ignored completer)
-zstyle ':completion:*:functions' ignored-patterns '_*'
-
-
-#
-# Bind keys.
-#
-bindkey -e
-bindkey "^[[B" down-line-or-history
-bindkey "^[[A" up-line-or-history
-bindkey "^[[D" backward-char
-bindkey "^[[C" forward-char
-bindkey "^R" history-incremental-search-backward
-bindkey "^F" history-incremental-search-forward
-bindkey "^E" vi-end-of-line
-bindkey "^A" vi-beginning-of-line
-bindkey "^W" vi-forward-blank-word
-bindkey "^B" vi-backward-blank-word
-bindkey '\e[3~' delete-char
-bindkey '\e[1~' beginning-of-line
-bindkey '\e[4~' end-of-line
-bindkey '\eOH' beginning-of-line
-bindkey '\eOF' end-of-line
-
-
-#
-# Load local additions
-#
-test -f $HOME/.zsh_local && source $HOME/.zsh_local
+for zshrc_snipplet in ~/.zsh.d/S[0-9][0-9]*[^~] ; do
+    source $zshrc_snipplet
+done
