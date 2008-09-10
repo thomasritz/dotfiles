@@ -1,40 +1,30 @@
 #! /bin/zsh
 
-bindkey -v "^[[3~" delete-char
-bindkey -v "^[[5~" backward-word
-bindkey -v "^[[6~" forward-word
+# see S10_zshopts for vi/emacs binding
 
-bindkey -v "^[[A" history-beginning-search-backward
-bindkey -v "^[[B" history-beginning-search-forward
+# type the beginning of a command... and press the <up> key!
+bindkey "^[[A"   up-line-or-search
+bindkey "^[[B" down-line-or-search
 
-bindkey -v "^A" beginning-of-line
-bindkey -v "^E" end-of-line
-bindkey -v "^K" kill-line
-bindkey -v "^L" clear-screen
-bindkey -v "^R" history-incremental-search-backward
-bindkey -v "^U" kill-whole-line
-bindkey -v "^V" quoted-insert
-bindkey -v "^W" backward-kill-word
+bindkey "^A" vi-beginning-of-line
+bindkey "^E" vi-end-of-line
 
-bindkey -v "^N" down-history
-bindkey -v "^P" up-history
+bindkey "^K" kill-line
+bindkey "^L" clear-screen
+bindkey "^R" history-incremental-search-backward
+bindkey "^F" history-incremental-search-forward
+bindkey "^W" backward-kill-word
 
-bindkey -v "^[H" run-help
-bindkey -v "^[h" run-help
+bindkey "^N" down-history
+bindkey "^P" up-history
 
-#bindkey -e
-#bindkey "^[[B" down-line-or-history
-#bindkey "^[[A" up-line-or-history
-#bindkey "^[[D" backward-char
-#bindkey "^[[C" forward-char
-#bindkey "^R" history-incremental-search-backward
-#bindkey "^F" history-incremental-search-forward
-#bindkey "^E" vi-end-of-line
-#bindkey "^A" vi-beginning-of-line
-#bindkey "^W" vi-forward-blank-word
-#bindkey "^B" vi-backward-blank-word
-#bindkey '\e[3~' delete-char
-#bindkey '\e[1~' beginning-of-line
-#bindkey '\e[4~' end-of-line
-#bindkey '\eOH' beginning-of-line
-#bindkey '\eOF' end-of-line
+bindkey "^D" delete-char
+bindkey '\e[3~' delete-char
+bindkey '\e[1~' beginning-of-line
+bindkey '\e[4~' end-of-line
+bindkey '\eOH' beginning-of-line
+bindkey '\eOF' end-of-line
+
+
+# shortcut
+bindkey -s "^O" "ls\n"
