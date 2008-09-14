@@ -70,7 +70,7 @@ $ch2$rst"
 }
 
 if [ $UID -eq 0 ]; then
-    PROMPT="$bgc%{%B$fg[yellow]%}[%{$fg[red]%}%n %m%{$fg[yellow]%}]$rst "
+    PROMPT="$bgc%{%B$fg[blue]%}[%{$fg[red]%}%n@%m%{$fg[blue]%}]$rst "
     RPROMPT="$rst%{$fg[red]%}(%B%{$fg[red]%}%~%b%{$fg[red]%})$rst "
 else
     lprompt '[]' bold green
