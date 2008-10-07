@@ -67,8 +67,5 @@ augroup DeleteTrailingWhitespaces
 augroup END
 
 augroup TabWidth
-  autocmd!
-  autocmd FileType objc  set tabstop=4 shiftwidth=4 softtabstop=4
-  autocmd FileType tcl   set tabstop=4 shiftwidth=4 softtabstop=4
-  autocmd FileType ruby  set tabstop=2 shiftwidth=2 softtabstop=2
+  autocmd! FileType objc,tcl  setlocal tabstop=4 shiftwidth=4 softtabstop=4
 augroup END
