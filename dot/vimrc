@@ -33,7 +33,7 @@ set wildmenu            " Command-line completion operates in an enhanced mode.
 set wildmode=longest,list
                         " Completion mode.
 set list                " List mode: Show tabs as CTRL-I, show end of line with $.
-set listchars=tab:»\ ,extends:¤,trail:·
+set listchars=tab:Â»\ ,extends:Â¤,trail:Â·
                         " Strings to use in 'list' mode.
 
 syntax on               " Syntax highlighting
