@@ -12,7 +12,7 @@ alias l='ls -lF'
 alias la='ls -laF'
 alias ll='ls -lF'
 alias lh='ls -lhF'
-alias ls="ls -F"
+alias ls="ls --color=auto -F"
 alias lsd='ls -ld *(-/DN)'      # List only dirs and symlinks that point to dirs
 alias lsa='ls -ld .*'           # List only file beginning with "."
 alias mv='nocorrect mv'         # no spelling correction on mv
