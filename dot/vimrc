@@ -30,7 +30,7 @@ set encoding=utf-8      " The terminal encoding.
 set fileencodings=ucs-bom,utf-8,default,latin1  " The order of file encodings to try.
 set shell=/bin/sh       " Always use sh when executing commands with :!
 set wildmenu            " Command-line completion operates in an enhanced mode.
-set wildmode=longest,list
+set wildmode=list:longest,list:full
                         " Completion mode.
 set list                " List mode: Show tabs as CTRL-I, show end of line with $.
 set listchars=tab:»\ ,extends:¤,trail:·
