@@ -69,3 +69,7 @@ augroup END
 augroup TabWidth
   autocmd! FileType objc,tcl  setlocal tabstop=4 shiftwidth=4 softtabstop=4
 augroup END
+
+augroup Objc
+  autocmd! FileType matlab set filetype=objc
+augroup END
