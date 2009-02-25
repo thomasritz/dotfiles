@@ -4,16 +4,6 @@ autoload colors
 colors
 
 # ----------------------------------------------------------------------
-# various git scripts
-
-gitize() {
-        git init \
-        && git add . \
-        && git commit -a -m"initial commit" \
-        && git gc
-}
-
-# ----------------------------------------------------------------------
 # The following implements a caching mechanism for git information.
 # The RPROMPT executes get_git_bprompt_info() and include the output...
 #
@@ -56,11 +46,9 @@ new_parse_git_branch() {
             branch="$(cut -c1-7 "$git_dir/HEAD")..."
     fi
 
-    __ZSH_GIT_FULL_DIR=$(readlink -f ${git_dir:h})
-    __ZSH_GIT_DIR="${__ZSH_GIT_FULL_DIR/$HOME/~}"
+    __ZSH_GIT_DIR=${git_dir:h}
     __ZSH_GIT_BRANCH="${branch#refs/heads/}"
 
-    export __ZSH_GIT_FULL_DIR
     export __ZSH_GIT_DIR
     export __ZSH_GIT_BRANCH
     export __ZSH_GIT_STATE
@@ -91,8 +79,7 @@ zsh_git_preexec_update_vars() {
 
 # this function returns the current git branch
 # it takes as argument a string with printf like arguments:
-#   '%P'     path to top of repository
-#   '%p'     path to top of repository, with s/$HOME/~/
+#   '%p'     path to top of repository
 #   '%r'     repos name
 #   '%b'     current branch
 #   '%s'     state of rebase/merge/bisect/am
@@ -106,7 +93,6 @@ get_git_prompt_info() {
         def='%p %b %s'
         fmt=$@
         res=${fmt:-$def}
-        res=${res//\%P/$__ZSH_GIT_FULL_DIR }
         res=${res//\%p/$__ZSH_GIT_DIR }
         res=${res//\%b/$__ZSH_GIT_BRANCH }
         test -n "$__ZSH_GIT_STATE" && \
