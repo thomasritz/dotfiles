@@ -8,11 +8,19 @@ alias mmv='noglob zmv -W'
 alias :q='exit'
 alias :e='vim'
 alias :n='vim'
-alias l='ls -lF'
-alias la='ls -laF'
-alias ll='ls -lF'
-alias lh='ls -lhF'
-alias ls="ls --color=auto -F"
+
+case "${OSTYPE}" in
+  freebsd*|darwin*)
+  alias ls="ls -G -w -F"
+  ;;
+  linux*)
+  alias ls="ls --color=auto -F"
+  ;;
+esac
+
+alias l='ls -l'
+alias la='ls -la'
+alias lh='ls -lh'
 alias lsd='ls -ld *(-/DN)'      # List only dirs and symlinks that point to dirs
 alias lsa='ls -ld .*'           # List only file beginning with "."
 alias mv='nocorrect mv'         # no spelling correction on mv
