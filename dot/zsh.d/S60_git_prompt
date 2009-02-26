@@ -1,4 +1,4 @@
-# zgitinit and prompt_wunjo_setup must be somewhere in your $fpath, see README for more.
+# zgitinit and prompt_rittsu_setup must be somewhere in your $fpath, see README for more.
 
 fpath=($fpath $HOME/.zsh.d/zsh-git/functions)
 typeset -U fpath
@@ -6,4 +6,4 @@ typeset -U fpath
 setopt promptsubst
 autoload -U promptinit
 promptinit
-prompt wunjo
+prompt rittsu
