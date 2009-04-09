@@ -73,3 +73,7 @@ augroup END
 augroup Objc
   autocmd! FileType matlab set filetype=objc
 augroup END
+
+augroup Java
+  autocmd! FileType java setlocal path+=Java/*/src/**
+augroup END
