@@ -10,7 +10,7 @@ prompt rittsu
 
 
 set_git_identity() {
-  if [[ $PWD == (*/private||*/private/*||*/Pictures/*) ]]; then
+  if [[ $PWD == */(private|Pictures)(|/*) ]]; then
     export GIT_AUTHOR_EMAIL="thomas@galaxy-ritz.de"
   else
     unset GIT_AUTHOR_EMAIL
