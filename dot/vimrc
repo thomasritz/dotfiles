@@ -1,5 +1,7 @@
 set nocompatible        " Use Vim defaults (much better!)
 set noedcompatible
+set modeline            " Read configuration from inside loaded files
+set modelines=5         " Scan up to 5 lines for a modeline
 set bs=2                " Allow backspacing over everything in insert mode
 set ai                  " Always set autoindenting on
 set tw=0                " Don't wrap lines
