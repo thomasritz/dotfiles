@@ -38,8 +38,11 @@ set list                " List mode: Show tabs as CTRL-I, show end of line with 
 set listchars=tab:»\ ,extends:¤,trail:·
                         " Strings to use in 'list' mode.
 
-syntax on               " Syntax highlighting
-syntax sync fromstart
+" Activate syntax highlighting unless for vimdiff
+if !&diff
+  syntax on
+  syntax sync fromstart
+endif
 set hlsearch            " Highlight all search matches.
 
 filetype on             " Enable filetype detection
