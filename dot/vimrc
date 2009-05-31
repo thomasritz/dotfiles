@@ -72,7 +72,7 @@ augroup DeleteTrailingWhitespaces
 augroup END
 
 augroup TabWidth
-  autocmd! FileType objc,tcl,java  setlocal tabstop=4 shiftwidth=4 softtabstop=4
+  autocmd! FileType objc,tcl,java,php  setlocal tabstop=4 shiftwidth=4 softtabstop=4
 augroup END
 
 augroup Objc
