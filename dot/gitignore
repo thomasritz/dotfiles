@@ -2,3 +2,4 @@
 .AppleDouble
 :2eDS_Store
 *.sw?
+.fseventsd
