@@ -3,15 +3,35 @@
 setopt promptsubst
 
 function git_prompt_info() {
-  if [[ -d .git ]]; then
-    local ref=$(git symbolic-ref HEAD 2> /dev/null) || return
-    local branch=${ref#refs/heads/}
-    echo -n " %{$fg[blue]%}(git: ${branch})%{$reset_color%}"
-    if [[ $(git status | tail -n1) != "nothing to commit (working directory clean)" ]]; then
-      echo -n " %{$fg[yellow]%}✗%{$reset_color%}"
-    fi
-    echo
+  local git_dir
+  git_dir=$(git rev-parse --git-dir 2>/dev/null)
+  if [ $? -ne 0 ] || [ -z "$git_dir" ]; then
+    return
   fi
+
+  local ref_name
+  ref_name=$(git symbolic-ref -q HEAD)
+  if [ $? -eq 0 ]; then
+    if [[ $ref_name == refs/(heads|tags)/* ]]; then
+      ref_name=${ref_name#refs/(heads|tags)/}
+    fi
+  else
+    ref_name=$(git name-rev --name-only --no-undefined --always HEAD)
+    if [[ $ref_name == remotes/* ]]; then
+      ref_name=${ref_name#remotes/}
+    fi
+  fi
+
+  local git_describe
+  git_describe=$(git describe --always HEAD)
+
+  echo -n " on %{$fg[blue]%}${ref_name}%{$reset_color%}"
+  echo -n " • %{$fg[blue]%}${git_describe}%{$reset_color%}"
+
+  if [[ $(git status | tail -n1) != "nothing to commit (working directory clean)" ]]; then
+    echo -n " %{$fg[yellow]%}✗%{$reset_color%}"
+  fi
+  echo
 }
 
 prompt_precmd() {
