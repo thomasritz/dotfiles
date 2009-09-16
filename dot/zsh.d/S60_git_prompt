@@ -1,9 +1,44 @@
 # zgitinit and prompt_rittsu_setup must be somewhere in your $fpath, see README for more.
 
-fpath=($fpath $HOME/.zsh.d/zsh-git/functions)
-typeset -U fpath
-
 setopt promptsubst
-autoload -U promptinit
-promptinit
-prompt rittsu
+
+function git_prompt_info() {
+  if [[ -d .git ]]; then
+    local ref=$(git symbolic-ref HEAD 2> /dev/null) || return
+    local branch=${ref#refs/heads/}
+    echo -n " %{$fg[blue]%}(git: ${branch})%{$reset_color%}"
+    if [[ $(git status | tail -n1) != "nothing to commit (working directory clean)" ]]; then
+      echo -n " %{$fg[yellow]%}✗%{$reset_color%}"
+    fi
+    echo
+  fi
+}
+
+prompt_precmd() {
+  local ex=$?
+  psvar=()
+
+  if [[ $ex -ge 128 ]]; then
+    sig=$signals[$ex-127]
+    psvar[1]="sig${(L)sig}"
+  else
+    psvar[1]="$ex"
+  fi
+}
+
+PROMPT=
+PROMPT+="%{$fg[cyan]%}%(2~.%~.%/)%{$reset_color%}"
+PROMPT+="\$(git_prompt_info)"
+PROMPT+="
+"
+PROMPT+="%{$fg[yellow]%}%(!.#.∴)%{$reset_color%} "
+
+
+RPROMPT=
+if [[ $TERM != screen* ]] || [ -z "$STY" ]; then
+  RPROMPT+="%{$fg[cyan]%}%D{%Y-%m-%d} %{$fg[blue]%}%D{%T}%{$reset_color%} "
+fi
+RPROMPT+="%{$fg[cyan]%}%n@%m%{$reset_color%}"
+RPROMPT+="%(?.. %{$fg[red]%}exited %1v%{$reset_color%})"
+
+precmd_functions+='prompt_precmd'
