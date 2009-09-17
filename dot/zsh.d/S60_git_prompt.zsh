@@ -23,7 +23,10 @@ function git_prompt_info() {
   fi
 
   local git_describe
-  git_describe=$(git describe --always HEAD)
+  git_describe=$(git describe --always HEAD 2>/dev/null)
+  if [ $? -ne 0 ]; then
+    git_describe=$(git rev-parse HEAD)[0,8]
+  fi
 
   echo -n " on %{$fg[blue]%}${ref_name}%{$reset_color%}"
   echo -n " • %{$fg[blue]%}${git_describe}%{$reset_color%}"
