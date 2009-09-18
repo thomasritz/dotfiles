@@ -9,18 +9,11 @@ function git_prompt_info() {
     return
   fi
 
+  local git_status
+  git_status=$(git status 2>/dev/null)
+
   local ref_name
-  ref_name=$(git symbolic-ref -q HEAD)
-  if [ $? -eq 0 ]; then
-    if [[ $ref_name == refs/(heads|tags)/* ]]; then
-      ref_name=${ref_name#refs/(heads|tags)/}
-    fi
-  else
-    ref_name=$(git name-rev --name-only --no-undefined --always HEAD)
-    if [[ $ref_name == remotes/* ]]; then
-      ref_name=${ref_name#remotes/}
-    fi
-  fi
+  ref_name=$(git branch 2> /dev/null | grep '^\*' | sed 's/^\*\ //')
 
   local git_describe
   git_describe=$(git describe --always HEAD 2>/dev/null)
@@ -29,10 +22,12 @@ function git_prompt_info() {
     git_describe=$git_describe[0,8]
   fi
 
+  local git_dirty
+  git_dirty=$(echo $gstatus | sed 's/^#.*$//' | tail -2 | grep 'nothing to commit (working directory clean)'; echo $?)
+
   echo -n " on %{$fg[blue]%}${ref_name}%{$reset_color%}"
   echo -n " • %{$fg[blue]%}${git_describe}%{$reset_color%}"
-
-  if [[ $(git status | tail -n1) != "nothing to commit (working directory clean)" ]]; then
+  if [[ $dirty = 1 ]]; then
     echo -n " %{$fg[yellow]%}✗%{$reset_color%}"
   fi
   echo
