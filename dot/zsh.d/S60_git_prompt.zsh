@@ -13,7 +13,7 @@ function git_prompt_info() {
   git_status=$(git status 2>/dev/null)
 
   local git_ref_name
-  git_ref_name=$(echo $git_status | grep '^# On branch ' | sed 's/^# On branch //')
+  git_ref_name=$(echo $git_status | egrep '^# (On branch |Not currently on any branch)' | sed -e 's/^# On branch //' -e 's/^# Not currently on any branch./no branch/')
 
   local git_is_initial_commit
   git_is_initial_commit=$(echo $git_status | grep -c '# Initial commit')
