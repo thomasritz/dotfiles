@@ -12,22 +12,30 @@ function git_prompt_info() {
   local git_status
   git_status=$(git status 2>/dev/null)
 
-  local ref_name
-  ref_name=$(git branch 2> /dev/null | grep '^\*' | sed 's/^\*\ //')
+  local git_ref_name
+  git_ref_name=$(echo $git_status | grep '^# On branch ' | sed 's/^# On branch //')
+
+  local git_is_initial_commit
+  git_is_initial_commit=$(echo $git_status | grep -c '# Initial commit')
 
   local git_describe
-  git_describe=$(git describe --always HEAD 2>/dev/null)
-  if [ $? -ne 0 ]; then
-    git_describe=$(git rev-parse HEAD)
-    git_describe=$git_describe[0,8]
+  if [[ $git_is_initial_commit = 1 ]]; then
+    git_describe="Initial commit"
+  else
+    git_describe=$(git describe --always HEAD 2>/dev/null)
+    if [ $? -ne 0 ]; then
+      git_describe=$(git rev-parse HEAD)
+      git_describe=$git_describe[0,8]
+    fi
   fi
 
-  local git_dirty
-  git_dirty=$(echo $gstatus | sed 's/^#.*$//' | tail -2 | grep 'nothing to commit (working directory clean)'; echo $?)
 
-  echo -n " on %{$fg[blue]%}${ref_name}%{$reset_color%}"
+  local git_is_dirty
+  git_is_dirty=$(echo $git_status | sed 's/^#.*$//' | tail -2 | grep 'nothing to commit (working directory clean)'; echo $?)
+
+  echo -n " on %{$fg[blue]%}${git_ref_name}%{$reset_color%}"
   echo -n " • %{$fg[blue]%}${git_describe}%{$reset_color%}"
-  if [[ $dirty = 1 ]]; then
+  if [[ $git_is_dirty = 1 ]]; then
     echo -n " %{$fg[yellow]%}✗%{$reset_color%}"
   fi
   echo
