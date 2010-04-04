@@ -3,7 +3,7 @@ alias p="ssh private"
 
 
 set_git_identity() {
-  if [[ $PWD == */(private|other|Pictures|Volumes/DOCS)(|/*) ]]; then
+  if [[ $PWD == */(private|other|Pictures|Volumes/DOCS|salami-projekte)(|/*) ]]; then
     export GIT_AUTHOR_EMAIL="thomas@galaxy-ritz.de"
   else
     unset GIT_AUTHOR_EMAIL
