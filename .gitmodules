@@ -4,3 +4,6 @@
 [submodule "dot/vim/vendor/vim-cucumber"]
 	path = dot/vim/vendor/vim-cucumber
 	url = git://github.com/tpope/vim-cucumber.git
+[submodule "dot/vim/vendor/vim-rails"]
+	path = dot/vim/vendor/vim-rails
+	url = git://github.com/tpope/vim-rails.git
