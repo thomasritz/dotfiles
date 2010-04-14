@@ -1,0 +1,1 @@
+../vendor/vim-haml/indent/haml.vim
