@@ -22,3 +22,6 @@
 [submodule "dot/vim/vendor/vim-surround"]
 	path = dot/vim/vendor/vim-surround
 	url = git://github.com/tpope/vim-surround.git
+[submodule "dot/vim/vendor/vim-repeat"]
+	path = dot/vim/vendor/vim-repeat
+	url = git://github.com/tpope/vim-repeat.git
