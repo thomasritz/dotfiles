@@ -13,3 +13,6 @@
 [submodule "dot/vim/vendor/nerdcommenter"]
 	path = dot/vim/vendor/nerdcommenter
 	url = git://github.com/scrooloose/nerdcommenter.git
+[submodule "dot/vim/vendor/ack.vim"]
+	path = dot/vim/vendor/ack.vim
+	url = git://github.com/mileszs/ack.vim.git
