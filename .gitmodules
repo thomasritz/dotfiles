@@ -25,3 +25,6 @@
 [submodule "dot/vim/vendor/vim-repeat"]
 	path = dot/vim/vendor/vim-repeat
 	url = git://github.com/tpope/vim-repeat.git
+[submodule "dot/vim/vendor/snipmate.vim"]
+	path = dot/vim/vendor/snipmate.vim
+	url = git://github.com/msanders/snipmate.vim.git

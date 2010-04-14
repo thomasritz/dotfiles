@@ -1,0 +1,1 @@
+../vendor/snipmate.vim/autoload/snipMate.vim
