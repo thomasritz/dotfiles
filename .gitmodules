@@ -16,3 +16,6 @@
 [submodule "dot/vim/vendor/ack.vim"]
 	path = dot/vim/vendor/ack.vim
 	url = git://github.com/mileszs/ack.vim.git
+[submodule "dot/vim/vendor/vim-fugitive"]
+	path = dot/vim/vendor/vim-fugitive
+	url = git://github.com/tpope/vim-fugitive.git
