@@ -7,3 +7,6 @@
 [submodule "dot/vim/vendor/vim-rails"]
 	path = dot/vim/vendor/vim-rails
 	url = git://github.com/tpope/vim-rails.git
+[submodule "dot/vim/vendor/nerdtree"]
+	path = dot/vim/vendor/nerdtree
+	url = git://github.com/scrooloose/nerdtree.git
