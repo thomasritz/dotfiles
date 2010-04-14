@@ -10,3 +10,6 @@
 [submodule "dot/vim/vendor/nerdtree"]
 	path = dot/vim/vendor/nerdtree
 	url = git://github.com/scrooloose/nerdtree.git
+[submodule "dot/vim/vendor/nerdcommenter"]
+	path = dot/vim/vendor/nerdcommenter
+	url = git://github.com/scrooloose/nerdcommenter.git
