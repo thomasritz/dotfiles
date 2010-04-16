@@ -3,41 +3,12 @@
 setopt promptsubst
 
 function git_prompt_info() {
-  local git_dir
-  git_dir=$(git rev-parse --git-dir 2>/dev/null)
-  if [ $? -ne 0 ] || [ -z "$git_dir" ]; then
-    return
-  fi
+  local ref branch
 
-  local git_status
-  git_status=$(git status 2>/dev/null)
+  ref=$(git symbolic-ref HEAD 2> /dev/null) || return
+  branch=${ref#refs/heads/}
 
-  local git_ref_name
-  git_ref_name=$(echo $git_status | egrep '^# (On branch |Not currently on any branch)' | sed -e 's/^# On branch //' -e 's/^# Not currently on any branch./no branch/')
-
-  local git_is_initial_commit
-  git_is_initial_commit=$(echo $git_status | grep -c '# Initial commit')
-
-  local git_describe
-  if [[ $git_is_initial_commit = 1 ]]; then
-    git_describe="Initial commit"
-  else
-    git_describe=$(git describe --always HEAD 2>/dev/null)
-    if [ $? -ne 0 ]; then
-      git_describe=$(git rev-parse HEAD)
-      git_describe=$git_describe[0,8]
-    fi
-  fi
-
-
-  local git_is_dirty
-  git_is_dirty=$(echo $git_status | sed 's/^#.*$//' | tail -2 | grep 'nothing to commit (working directory clean)'; echo $?)
-
-  echo -n " on %{$fg[blue]%}${git_ref_name}%{$reset_color%}"
-  echo -n " • %{$fg[blue]%}${git_describe}%{$reset_color%}"
-  if [[ $git_is_dirty = 1 ]]; then
-    echo -n " %{$fg[yellow]%}✗%{$reset_color%}"
-  fi
+  echo -n " ‹%{$fg[blue]%}${branch}%{$reset_color%}›"
   echo
 }
 
