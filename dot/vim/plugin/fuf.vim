@@ -1,0 +1,1 @@
+../vendor/fuzzyfinder/plugin/fuf.vim

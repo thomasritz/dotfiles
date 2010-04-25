@@ -28,3 +28,6 @@
 [submodule "dot/vim/vendor/snipmate.vim"]
 	path = dot/vim/vendor/snipmate.vim
 	url = git://github.com/msanders/snipmate.vim.git
+[submodule "dot/vim/vendor/fuzzyfinder"]
+	path = dot/vim/vendor/fuzzyfinder
+	url = git://github.com/vim-bundles/fuzzyfinder.git
