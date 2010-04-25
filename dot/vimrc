@@ -66,6 +66,9 @@ map <C-n> :bn<CR>
 map j gj
 map k gk
 
+nnoremap <silent> ,b      :FufBuffer<CR>
+nnoremap <silent> ,f      :FufFileWithCurrentBufferDir<CR>
+
 augroup DeleteTrailingWhitespaces
   autocmd!
   autocmd BufWritePre * ks|execute "%s/\\s\\+$//ge"|'s
