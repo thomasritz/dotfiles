@@ -85,3 +85,8 @@ augroup END
 augroup Java
   autocmd! FileType java setlocal path+=Java/*/src/**
 augroup END
+
+if has('gui_running')
+  set guioptions-=T  " no toolbar
+  "colorscheme elflord
+endif
