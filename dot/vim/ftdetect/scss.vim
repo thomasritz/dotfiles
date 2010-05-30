@@ -1,0 +1,1 @@
+../vendor/scss-syntax.vim/ftdetect/scss.vim

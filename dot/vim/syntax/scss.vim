@@ -1,0 +1,1 @@
+../vendor/scss-syntax.vim/syntax/scss.vim
