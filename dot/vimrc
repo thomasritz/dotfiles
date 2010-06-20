@@ -89,5 +89,4 @@ augroup END
 
 if has('gui_running')
   set guioptions-=T  " no toolbar
-  "colorscheme elflord
 endif
