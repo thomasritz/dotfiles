@@ -14,9 +14,14 @@ export VISUAL=vim
 export LESS="-R -M --shift 5"
 
 if [ $UID -eq 0 ]; then
-        PATH=~root/bin:$PATH
+  PATH=~root/bin:$PATH
 else
-        PATH="${HOME}/bin:${PATH}"
+  path=(
+    $HOME/bin
+    $HOME/.gem/ruby/1.8/bin
+    "$path[@]"
+  )
+  typeset -U path
 fi
 export PATH
 
