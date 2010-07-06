@@ -8,7 +8,7 @@ function git_prompt_info() {
   ref=$(git symbolic-ref HEAD 2> /dev/null) || return
   branch=${ref#refs/heads/}
 
-  echo -n " <%{$fg[blue]%}${branch}%{$reset_color%}>"
+  echo -n " ‹%{$fg[blue]%}${branch}%{$reset_color%}›"
   echo
 }
 
@@ -29,7 +29,7 @@ PROMPT+="%{$fg[cyan]%}%(2~.%~.%/)%{$reset_color%}"
 PROMPT+="\$(git_prompt_info)"
 PROMPT+="
 "
-PROMPT+="%{$fg[yellow]%}%(!.#.%%)%{$reset_color%} "
+PROMPT+="%{$fg[yellow]%}%(!.#.∴)%{$reset_color%} "
 
 
 RPROMPT=
