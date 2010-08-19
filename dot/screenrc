@@ -9,9 +9,3 @@ terminfo vt100 'AF=\E[3%p1%dm:AB=\E[4%p1%dm'
 defutf8 on
 ignorecase on
 msgwait 1
-
-# screen sets title to executed command
-# requires changes in .zshrc
-# http://matthew.loar.name/blog/2007/11/06/zsh__screen_for_great_justice/
-aclchg :window: -rwx  #?
-aclchg :window: +x title
