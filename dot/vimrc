@@ -68,7 +68,10 @@ map j gj
 map k gk
 
 nnoremap <silent> ,b      :FufBuffer<CR>
-nnoremap <silent> ,f      :FufFileWithCurrentBufferDir<CR>
+nnoremap <silent> ,f      :FufFile **/<CR>
+nnoremap <silent> ,F      :FufFileWithCurrentBufferDir<CR>
+nnoremap <silent> ,r      :FufRenewCache<CR>
+
 
 augroup DeleteTrailingWhitespaces
   autocmd!
