@@ -93,3 +93,5 @@ augroup END
 if has('gui_running')
   set guioptions-=T  " no toolbar
 endif
+
+lang en_US.UTF-8
