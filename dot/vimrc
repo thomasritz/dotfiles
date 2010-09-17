@@ -1,3 +1,5 @@
+let mapleader = ","
+
 set nocompatible        " Use Vim defaults (much better!)
 set noedcompatible
 set modeline            " Read configuration from inside loaded files
@@ -67,10 +69,10 @@ map <C-n> :bn<CR>
 map j gj
 map k gk
 
-nnoremap <silent> ,b      :FufBuffer<CR>
-nnoremap <silent> ,f      :FufFile **/<CR>
-nnoremap <silent> ,F      :FufFileWithCurrentBufferDir<CR>
-nnoremap <silent> ,r      :FufRenewCache<CR>
+nnoremap <silent> <Leader>b      :FufBuffer<CR>
+nnoremap <silent> <Leader>f      :FufFile **/<CR>
+nnoremap <silent> <Leader>F      :FufFileWithCurrentBufferDir<CR>
+nnoremap <silent> <Leader>r      :FufRenewCache<CR>
 
 
 augroup DeleteTrailingWhitespaces
