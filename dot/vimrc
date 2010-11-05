@@ -22,9 +22,10 @@ set ruler               " Show the line and column number of the cursor position
 set laststatus=2        " Always show a status line.
 set scrolloff=4         " Minimal number of screen lines to keep above and below the cursor.
 set hidden              " Allow several buffers to be opened (and unsaved).
-set tabstop=2           " Number of spaces that a <Tab> in the file counts for.
+set tabstop=8           " Number of spaces that a <Tab> in the file counts for.
 set shiftwidth=2        " Number of spaces to use for each step of (auto)indent.
 set softtabstop=2       " Number of spaces that a <Tab> counts for while performing editing operations.
+set shiftround          " Round indent to multiple of 'shiftwidth'.
 set expandtab           " Use the appropriate number of spaces to insert a <Tab>.
 set ignorecase          " Case-insensitive search
 set incsearch           " Incremental search shows the first match while typing the search pattern.
