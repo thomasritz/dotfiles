@@ -30,7 +30,10 @@
 	url = git://github.com/msanders/snipmate.vim.git
 [submodule "dot/vim/vendor/fuzzyfinder"]
 	path = dot/vim/vendor/fuzzyfinder
-	url = git://github.com/vim-bundles/fuzzyfinder.git
+	url = git://github.com/vim-scripts/FuzzyFinder.git
 [submodule "dot/vim/vendor/scss-syntax.vim"]
 	path = dot/vim/vendor/scss-syntax.vim
 	url = git://github.com/cakebaker/scss-syntax.vim.git
+[submodule "dot/vim/vendor/l9"]
+	path = dot/vim/vendor/l9
+	url = git://github.com/vim-scripts/L9.git
