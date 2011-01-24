@@ -8,6 +8,7 @@ set bs=2                " Allow backspacing over everything in insert mode
 set ai                  " Always set autoindenting on
 set tw=0                " Don't wrap lines
 set wrap                " Display long lines wrapped.
+set whichwrap+=<,>,h,l
 set viminfo='20,\"50    " Read/write a .viminfo file, don't store more than 50 lines of register
 set cmdheight=2         " Height of the command line (the one at the bottom)
 set background=light    " Switch this to dark for dark terminals
