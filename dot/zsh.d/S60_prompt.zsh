@@ -12,6 +12,15 @@ function git_prompt_info() {
   echo
 }
 
+function rvm_prompt() {
+  local rvm_info
+  rvm_info=$(~/.rvm/bin/rvm-prompt 2> /dev/null)
+  if [ -z "$rvm_info" ]; then
+    rvm_info="system ruby"
+  fi
+  echo " ‹%{$fg[green]%}${rvm_info}%{$reset_color%}›"
+}
+
 prompt_precmd() {
   local ex=$?
   psvar=()
@@ -27,6 +36,7 @@ prompt_precmd() {
 PROMPT=
 PROMPT+="%{$fg[cyan]%}%(2~.%~.%/)%{$reset_color%}"
 PROMPT+="\$(git_prompt_info)"
+PROMPT+="\$(rvm_prompt)"
 PROMPT+="
 "
 PROMPT+="%{$fg[yellow]%}%(!.#.∴)%{$reset_color%} "
