@@ -46,7 +46,7 @@ set listchars=tab:»\ ,extends:¤,trail:·
 if !&diff
   syntax on
   syntax sync fromstart
-  highlight Comment ctermfg=grey
+  "highlight Comment ctermfg=grey
 endif
 set hlsearch            " Highlight all search matches.
 
