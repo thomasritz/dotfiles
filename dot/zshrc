@@ -18,4 +18,4 @@ for zshrc_snipplet in ~/.zsh.d/S[0-9][0-9]*.zsh ; do
 done
 
 [[ -s "$HOME/.rvm/scripts/rvm" ]] && source "$HOME/.rvm/scripts/rvm"
-fpath=(~/.zsh/Completion $fpath)
+fpath=(~/.zsh.d/Completion $fpath)
