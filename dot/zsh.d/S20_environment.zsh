@@ -19,6 +19,8 @@ else
   path=(
     $HOME/bin
     $HOME/.gem/ruby/1.8/bin
+    /usr/local/bin
+    /usr/local/sbin
     "$path[@]"
   )
   typeset -U path
