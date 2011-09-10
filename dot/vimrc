@@ -81,7 +81,7 @@ nnoremap <silent> <Leader>r      :FufRenewCache<CR>
 
 augroup DeleteTrailingWhitespaces
   autocmd!
-  autocmd BufWritePre * ks|execute "%s/\\s\\+$//ge"|'s
+  autocmd BufWritePre * :%s/\s\+$//e
 augroup END
 
 augroup TabWidth
