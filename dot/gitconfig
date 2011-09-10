@@ -1,0 +1,29 @@
+[user]
+  name = Thomas Ritz
+  email = thomas@galaxy-ritz.de
+[color]
+  ui = auto
+[alias]
+  br = branch
+  st = status
+  ci = commit
+  co = checkout
+  sb = show-branch
+  di = diff
+  staged = diff --cached
+  oneline = log --pretty=oneline
+  sm = submodule
+  up = pull --rebase --all
+  lg = log --graph --pretty=oneline --abbrev-commit --decorate
+  lga = log --graph --pretty=oneline --abbrev-commit --decorate --all
+  serve = daemon --reuseaddr --verbose  --base-path=. --export-all ./.git
+  x = !gitx
+  k = !gitk
+[core]
+  excludesfile = ~/.gitignore
+[status]
+  submodulesummary = 1
+[push]
+  default = tracking
+[branch]
+  autosetuprebase = always
