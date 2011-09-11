@@ -1,4 +1,5 @@
 let mapleader = ","
+call pathogen#infect()
 
 set nocompatible        " Use Vim defaults (much better!)
 set noedcompatible
