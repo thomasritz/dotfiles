@@ -74,12 +74,6 @@ map <C-n> :bn<CR>
 map j gj
 map k gk
 
-nnoremap <silent> <Leader>g      :FufBuffer<CR>
-nnoremap <silent> <Leader>f      :FufFile **/<CR>
-nnoremap <silent> <Leader>F      :FufFileWithCurrentBufferDir<CR>
-nnoremap <silent> <Leader>r      :FufRenewCache<CR>
-
-
 augroup DeleteTrailingWhitespaces
   autocmd!
   autocmd BufWritePre * :%s/\s\+$//e

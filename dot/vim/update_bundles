@@ -3,6 +3,7 @@
 git_bundles = %w[
   git://github.com/tpope/vim-pathogen.git
   git://github.com/altercation/vim-colors-solarized.git
+  git://git.wincent.com/command-t.git
 ]
 
 require 'fileutils'
@@ -23,5 +24,9 @@ Dir.chdir(bundles_dir) do
     FileUtils.rm_f(File.join(dir, ".gitmodules"))
   end
 
+  Dir.chdir("command-t/ruby/command-t") do
+    `ruby extconf.rb`
+    `make`
   end
+
 end
