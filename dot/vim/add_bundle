@@ -4,13 +4,13 @@ require 'pathname'
 require 'fileutils'
 
 vim_dir = Pathname(__FILE__).parent.realpath
-bundles = (vim_dir + "bundles.txt").read.split("\n")
 
 url = ARGV.shift or raise "no URL given"
 
+bundles = (vim_dir + "bundles.txt").read.split("\n")
 unless bundles.include?(url)
   bundles << url
-  (vim_dir + "bundles.txt").open("w") {|f| f << bundles.join("\n")}
+  system "echo #{url} >> #{vim_dir + "bundles.txt"}"
 end
 
 
