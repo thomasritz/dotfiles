@@ -1,1 +1,0 @@
-../vendor/snipmate.vim/plugin/snipMate.vim

@@ -1,1 +1,0 @@
-../vendor/snipmate.vim/syntax/snippet.vim
