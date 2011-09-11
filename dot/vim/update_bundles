@@ -1,0 +1,14 @@
+#!/usr/bin/env ruby
+
+require 'pathname'
+require 'fileutils'
+
+vim_dir = Pathname(__FILE__).parent.realpath
+bundles = (vim_dir + "bundles.txt").read.split("\n")
+
+puts "trashing everything (lookout!)"
+Dir["#{vim_dir}/bundle/*"].each {|d| FileUtils.rm_rf(d) }
+
+bundles.each do |url|
+  system "#{vim_dir}/add_bundle #{url}"
+end
