@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 
 git_bundles = %w[
+  git://github.com/tpope/vim-pathogen.git
   git://github.com/altercation/vim-colors-solarized.git
 ]
 
