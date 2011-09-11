@@ -1,32 +1,14 @@
 #!/usr/bin/env ruby
 
-git_bundles = %w[
-  git://github.com/tpope/vim-pathogen.git
-  git://github.com/altercation/vim-colors-solarized.git
-  git://git.wincent.com/command-t.git
-]
-
+require 'pathname'
 require 'fileutils'
-require 'open-uri'
 
-bundles_dir = File.join(File.dirname(__FILE__), "bundle")
+vim_dir = Pathname(__FILE__).parent.realpath
+bundles = (vim_dir + "bundles.txt").read.split("\n")
 
-Dir.chdir(bundles_dir) do
+puts "trashing everything (lookout!)"
+Dir["#{vim_dir}/bundle/*"].each {|d| FileUtils.rm_rf(d) }
 
-  puts "trashing everything (lookout!)"
-  Dir["*"].each {|d| FileUtils.rm_rf d }
-
-  git_bundles.each do |url|
-    dir = url.split('/').last.sub(/\.git$/, '')
-    puts "unpacking #{url} into #{dir}"
-    `git clone --depth 1 #{url} #{dir}`
-    FileUtils.rm_rf(File.join(dir, ".git"))
-    FileUtils.rm_f(File.join(dir, ".gitmodules"))
-  end
-
-  Dir.chdir("command-t/ruby/command-t") do
-    `ruby extconf.rb`
-    `make`
-  end
-
+bundles.each do |url|
+  system "#{vim_dir}/add_bundle #{url}"
 end
