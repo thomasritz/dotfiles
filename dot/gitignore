@@ -5,3 +5,4 @@
 .fseventsd
 *~
 .~lock.*.odt#
+.netrwhist
