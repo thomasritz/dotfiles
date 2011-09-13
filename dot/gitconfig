@@ -16,7 +16,7 @@
   staged = diff --cached
   oneline = log --pretty=oneline
   sm = submodule
-  up = pull --rebase --all
+  up = pull --rebase --all --prune
   lg = log --graph --pretty=oneline --abbrev-commit --decorate
   lga = log --graph --pretty=oneline --abbrev-commit --decorate --all
   serve = daemon --reuseaddr --verbose  --base-path=. --export-all ./.git
