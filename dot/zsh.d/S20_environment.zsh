@@ -1,31 +1,17 @@
 #! /bin/zsh
 
 if [ x"$HOME" = x ] ; then
-        export HOME=$(cd ~ ; pwd)
+  export HOME=$(cd ~ ; pwd)
 fi
 
 if [ x"$HOSTNAME" = x ] ; then
-        export HOSTNAME=$(hostname)
+  export HOSTNAME=$(hostname)
 fi
 
 export GREP_OPTIONS="--color"
 export EDITOR=vim
 export VISUAL=vim
 export LESS="-R -M --shift 5"
-
-if [ $UID -eq 0 ]; then
-  PATH=~root/bin:$PATH
-else
-  path=(
-    $HOME/bin
-    $HOME/.gem/ruby/1.8/bin
-    /usr/local/bin
-    /usr/local/sbin
-    "$path[@]"
-  )
-  typeset -U path
-fi
-export PATH
 
 # this makes man pages look nicer...
 export LESS_TERMCAP_mb=$'\E[01;31m'

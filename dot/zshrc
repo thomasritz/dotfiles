@@ -16,6 +16,3 @@ setopt extended_glob
 for zshrc_snipplet in ~/.zsh.d/S[0-9][0-9]*.zsh ; do
     source $zshrc_snipplet
 done
-
-[[ -s "$HOME/.rvm/scripts/rvm" ]] && source "$HOME/.rvm/scripts/rvm"
-fpath=(~/.zsh.d/Completion $fpath)
