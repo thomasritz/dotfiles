@@ -32,7 +32,7 @@ alias j=jobs
 alias git='nocorrect git'
 alias gst='nocorrect git st'
 alias gs='nocorrect git show'
-alias b='nocorrect bundle exec'
+alias bx='nocorrect bundle exec'
 
 wt() {
         while true ; do ( $@ ) ; sleep 1 ; clear ; done
