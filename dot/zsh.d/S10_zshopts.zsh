@@ -84,7 +84,7 @@ setopt hist_no_store        # remove hists access cmds from hist
 setopt hist_reduce_blanks   # remove superfluous blanks
 setopt hist_save_no_dups    # no dups on history saving
 setopt hist_verify          # some expansion gadget
-setopt no_hup               # don't SIGHUP bg cmds on logout
+setopt hup                  # SIGHUP cmds on logout
 setopt no_ignore_braces     # do braces expansion
 setopt no_ignore_eof        # don't ignore ^D
 setopt no_inc_appendhistory # dont' append incrementally
