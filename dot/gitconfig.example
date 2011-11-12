@@ -1,8 +1,6 @@
-# Define 'user.name' and 'user.email' in dot/zsh.d/S99_local.zsh like this:
-# export GIT_AUTHOR_NAME="My Name"
-# export GIT_AUTHOR_EMAIL="me@example.com"
-# export GIT_COMMITTER_EMAIL=$GIT_AUTHOR_EMAIL
-# export GIT_COMMITTER_NAME=$GIT_AUTHOR_NAME
+[user]
+  name = My Real Name
+  email = me@example.com
 
 [color]
   ui = auto
