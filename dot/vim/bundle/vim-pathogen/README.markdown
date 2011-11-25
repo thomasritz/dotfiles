@@ -10,9 +10,9 @@ Installation
 
 Install to `~/.vim/autoload/pathogen.vim`.  Or copy and paste:
 
-    mkdir -p ~/.vim/autoload ~/.vim/bundle
-    curl https://raw.github.com/tpope/vim-pathogen/HEAD/autoload/pathogen.vim \
-      > ~/.vim/autoload/pathogen.vim
+    mkdir -p ~/.vim/autoload ~/.vim/bundle; \
+    curl -so ~/.vim/autoload/pathogen.vim \
+        https://raw.github.com/tpope/vim-pathogen/HEAD/autoload/pathogen.vim
 
 If you don't have `curl`, use `wget -O -` instead.
 
@@ -172,4 +172,5 @@ you're feeling especially charitable, follow [tpope](http://tpo.pe/) on
 License
 -------
 
-Distributable under the same terms as Vim itself.  See `:help license`.
+Copyright (c) Tim Pope.  Distributed under the same terms as Vim itself.
+See `:help license`.
