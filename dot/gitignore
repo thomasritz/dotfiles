@@ -7,3 +7,5 @@
 .~lock.*.odt#
 .netrwhist
 *.rbc
+*.xmp
+*.NEF
