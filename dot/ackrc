@@ -1,5 +1,5 @@
 --type-add=ruby=.haml,.rake,.rsel,.builder
---type-add=html=.html.erb,.html.haml
+--type-add=html=.html.erb,.html.haml,.page
 --type-add=js=.js.erb,.jst
 --type-add=css=.sass,.less,.scss
 --type-set=cucumber=.feature
@@ -20,6 +20,7 @@
 --ignore-dir=doc
 --ignore-dir=coverage
 --ignore-dir=.output
+--ignore-dir=output
 --sort-files
 --color
 --follow
