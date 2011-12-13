@@ -19,11 +19,3 @@ puts "unpacking #{url} into #{vim_dir + "bundle" + dir}"
 `git clone --depth 1 #{url} #{vim_dir + "bundle" + dir}`
 FileUtils.rm_rf(vim_dir + "bundle" + dir + ".git")
 FileUtils.rm_f(vim_dir + "bundle" + dir + ".gitmodules")
-
-case dir
-when "command-t"
-  Dir.chdir(vim_dir + "bundle/command-t/ruby/command-t") do
-    system "ruby extconf.rb"
-    system "make"
-  end
-end
