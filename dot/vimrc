@@ -98,4 +98,6 @@ endif
 lang en_US.UTF-8
 
 nnoremap <silent> ,t      :FufFileWithCurrentBufferDir<CR>
+nnoremap <silent> ,T      :FufFile **/<CR>
 nnoremap <silent> ,g      :FufBuffer<CR>
+nnoremap <silent> ,r      :FufRenewCache<CR>
