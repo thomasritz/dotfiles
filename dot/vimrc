@@ -101,3 +101,5 @@ nnoremap <silent> ,t      :FufFileWithCurrentBufferDir<CR>
 nnoremap <silent> ,T      :FufFile **/<CR>
 nnoremap <silent> ,g      :FufBuffer<CR>
 nnoremap <silent> ,r      :FufRenewCache<CR>
+let g:fuf_dir_exclude = '\v(^|[/\\])(\.(hg|git|bzr|svn)|tmp)($|[/\\])'
+let g:fuf_file_exclude = '\v\~$|\.(o|exe|dll|bak|orig|swp)$|(^|[/\\])(\.(hg|git|bzr|svn)|tmp)($|[/\\])'
