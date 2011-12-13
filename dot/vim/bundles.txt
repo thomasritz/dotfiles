@@ -10,3 +10,5 @@ git://github.com/tpope/vim-repeat.git
 git://github.com/tpope/vim-commentary.git
 git://github.com/tpope/vim-speeddating.git
 git://github.com/mileszs/ack.vim.git
+git://github.com/vim-scripts/FuzzyFinder.git
+git://github.com/vim-scripts/L9.git
