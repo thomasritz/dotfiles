@@ -12,3 +12,4 @@ git://github.com/tpope/vim-speeddating.git
 git://github.com/mileszs/ack.vim.git
 git://github.com/vim-scripts/FuzzyFinder.git
 git://github.com/vim-scripts/L9.git
+https://github.com/Lokaltog/vim-powerline.git
