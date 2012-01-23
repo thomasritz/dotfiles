@@ -13,3 +13,4 @@ git://github.com/mileszs/ack.vim.git
 git://github.com/vim-scripts/FuzzyFinder.git
 git://github.com/vim-scripts/L9.git
 https://github.com/Lokaltog/vim-powerline.git
+https://github.com/Lokaltog/vim-easymotion.git
