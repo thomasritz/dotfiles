@@ -59,6 +59,7 @@ filetype plugin on      " Enable filetype-specific plugins
 
 " Search for the string marked in visual mode. E.g.: press v, go some chars to the right, press /
 vmap / y/<C-R>"<CR>
+vmap ß y:Ack <C-R>"<CR>
 
 " Don't use Ex mode, use Q for formatting
 map Q gq
