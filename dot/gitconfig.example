@@ -28,3 +28,5 @@
   default = tracking
 [branch]
   autosetuprebase = always
+[pull]
+  rebase = true
