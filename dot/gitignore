@@ -10,3 +10,4 @@
 *.xmp
 *.NEF
 tags
+couchdb.std*

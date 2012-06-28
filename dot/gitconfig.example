@@ -5,23 +5,29 @@
 [color]
   ui = auto
 [alias]
+  aa = add -A
   br = branch
   st = status
   ci = commit
   co = checkout
-  sb = show-branch
+  cruise = push -f my HEAD:cruise
   di = diff
-  staged = diff --cached
-  oneline = log --pretty=oneline
-  sm = submodule
-  up = pull --rebase --all --prune
+  f = fetch --all --prune
+  l = pull
   lg = log --graph --pretty=oneline --abbrev-commit --decorate
   lga = log --graph --pretty=oneline --abbrev-commit --decorate --all
-  serve = daemon --reuseaddr --verbose  --base-path=. --export-all ./.git
-  x = !gitx
-  k = !gitk
+  oneline = log --pretty=oneline
+  p = push
+  rh = reset HEAD
+  rhh = reset HEAD --hard
+  sb = show-branch
+  sm = submodule
+  st = status
+  staged = diff --cached
+  up = pull --rebase
 [core]
   excludesfile = ~/.gitignore
+	quotepath = false
 [status]
   submodulesummary = 1
 [push]
