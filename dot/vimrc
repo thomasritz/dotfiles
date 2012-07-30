@@ -98,5 +98,5 @@ endif
 
 lang en_US.UTF-8
 
-set wildignore+=*/.git/*,*/.hg/*,*/.svn/*,*/tmp/*,*/.output/*,*/.sass-cache/*
+set wildignore+=*/.git/*,*/.hg/*,*/.svn/*,*/tmp/*,*/.output/*,*/.sass-cache/*,*/build/*
 let g:ctrlp_extensions = ['tag', 'buffertag', 'line', 'changes', 'mixed']
