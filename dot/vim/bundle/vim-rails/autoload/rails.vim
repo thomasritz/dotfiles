@@ -3647,7 +3647,7 @@ function! s:BufSyntax()
           syn keyword rubyRailsTestControllerMethod assert_response assert_redirected_to assert_template assert_recognizes assert_generates assert_routing assert_dom_equal assert_dom_not_equal assert_select assert_select_rjs assert_select_encoded assert_select_email assert_tag assert_no_tag
         endif
       elseif buffer.type_name('spec')
-        syn keyword rubyRailsTestMethod describe context it its specify shared_examples_for it_should_behave_like before after around subject fixtures controller_name helper_name scenario feature background
+        syn keyword rubyRailsTestMethod describe context it its specify shared_context shared_examples_for it_should_behave_like before after around subject fixtures controller_name helper_name scenario feature background
         syn match rubyRailsTestMethod '\<let\>!\='
         syn keyword rubyRailsTestMethod violated pending expect double mock mock_model stub_model
         syn match rubyRailsTestMethod '\.\@<!\<stub\>!\@!'
@@ -3666,7 +3666,7 @@ function! s:BufSyntax()
       endif
       if buffer.type_name('config-routes')
         syn match rubyRailsMethod '\.\zs\%(connect\|named_route\)\>'
-        syn keyword rubyRailsMethod match get put post delete redirect root resource resources collection member nested scope namespace controller constraints
+        syn keyword rubyRailsMethod match get put post delete redirect root resource resources collection member nested scope namespace controller constraints mount
       endif
       syn keyword rubyRailsMethod debugger
       syn keyword rubyRailsMethod alias_attribute alias_method_chain attr_accessor_with_default attr_internal attr_internal_accessor attr_internal_reader attr_internal_writer delegate mattr_accessor mattr_reader mattr_writer superclass_delegating_accessor superclass_delegating_reader superclass_delegating_writer
@@ -4476,7 +4476,7 @@ function! s:BufSettings()
     call self.setvar('&shiftwidth',2)
     call self.setvar('&softtabstop',2)
     call self.setvar('&expandtab',1)
-    if exists('+completefunc') && self.getvar('&completefunc') == ''
+    if exists('+completefunc') && self.getvar('&completefunc') ==# '' && &g:completefunc ==# ''
       call self.setvar('&completefunc','syntaxcomplete#Complete')
     endif
   endif
