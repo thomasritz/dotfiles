@@ -181,7 +181,7 @@ navigating unfamiliar applications.
 
 Alternate and Related Files ~
 						*rails-alternate-related*
-Two commands, :A and :R, are used quickly jump to an "alternate" and a
+Two commands, :A and :R, are used to quickly jump to an "alternate" and a
 "related" file, defined below.
 
 	*rails-:A* *rails-:AE* *rails-:AS* *rails-:AV* *rails-:AT* *rails-:AD*
@@ -200,7 +200,7 @@ Two commands, :A and :R, are used quickly jump to an "alternate" and a
 :RT			and with a count and a file name argument, they find a
 :RD			file in 'path' (e.g., :1R PostsController.)  You can
 			also append a line number (post.rb:42) or a method
-			(PostsController#32) to both forms.
+			(PostsController#index) to both forms.
 
 					*rails-alternate* *rails-related*
 The alternate file is most frequently the test file, though there are
@@ -398,9 +398,10 @@ itself!).
 Custom Navigation Commands  ~
 						*rails-custom-navigation*
 
-It is also possible to create custom navigation commands.  This is best done
-in an initialization routine of some sort (e.g., an autocommand); see
-|rails-configuration| for details.
+It is also possible to create custom navigation commands.  The preferred way
+to do this is with the method outlined under |rails-custom-file-types|.  You
+can also use |:Rnavcommand|, either from |macros/rails.vim| or a
+|rails-:autocmd|.
 
 						*rails-:Rnavcommand*
 :Rnavcommand [options] {name} [{path} ...]
@@ -412,13 +413,9 @@ in an initialization routine of some sort (e.g., an autocommand); see
 			a file glob to use to find files, _excluding_ the
 			suffix.  Useful values include -glob=* and -glob=**/*.
 			The -default option specifies a default argument (not
-			a full path).  If it is specified as -default=model(),
-			-default=controller(), or -default=both(), the current
-			model, controller, or both (as with :Rintegrationtest)
-			is used as a default.
-
-						*rails-:Rcommand*
-:Rcommand		Obsolete alias for |:Rnavcommand|.
+			a full path).  If it is specified as -default=model()
+			or -default=controller(), the current model or
+			controller is used as a default.
 
 Examples: >
 	Rnavcommand api      app/apis -glob=**/* -suffix=_api.rb
@@ -847,6 +844,24 @@ Rails file is loaded.
 If you have settings particular to a specific project, they can be put in a
 config/rails.vim file in the root directory of the application.  The file is
 sourced in the |sandbox| for security reasons.
+
+						*rails-custom-file-types*
+Perhaps the most useful thing one can put in |config/rails.vim| is a
+declaration of additional types of files used in the application.  For
+example:
+>
+	let b:rails_file_types = {
+	      \ 'service': {
+	      \   'prefix': 'app/service/',
+	      \   'suffix': '_service.rb'},
+	      \ 'fabricator': {
+	      \   'prefix': ['test/fabricators/', 'spec/fabricators/'],
+	      \   'suffix': '_fabricator.rb',
+	      \   'affinity': 'model'}}
+<
+Providing this causes :Rservice and :Rfabricator navigation commands to be
+created.  The optional affinity option determines whether the current model
+name or controller name is used for the default when no argument is given.
 
 						*rails-:Rset*
 :Rset {option}[={value}]
