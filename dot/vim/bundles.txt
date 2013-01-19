@@ -10,7 +10,6 @@ git://github.com/tpope/vim-repeat.git
 git://github.com/tpope/vim-commentary.git
 git://github.com/tpope/vim-speeddating.git
 git://github.com/mileszs/ack.vim.git
-https://github.com/Lokaltog/vim-powerline.git
 https://github.com/Lokaltog/vim-easymotion.git
 git://github.com/kien/ctrlp.vim.git
 git://github.com/vim-scripts/AutoTag.git
