@@ -88,6 +88,10 @@ augroup Objc
   autocmd! FileType matlab set filetype=objc
 augroup END
 
+augroup Ruby
+  au BufRead,BufNewFile *.thor set filetype=ruby
+augroup END
+
 augroup Java
   autocmd! FileType java setlocal path+=Java/*/src/**
 augroup END
