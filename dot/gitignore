@@ -11,3 +11,4 @@
 *.NEF
 tags
 couchdb.std*
+crash.log
