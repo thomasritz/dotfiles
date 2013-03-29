@@ -12,3 +12,6 @@
 tags
 couchdb.std*
 crash.log
+/.output
+/.sass-cache
+/tmp
