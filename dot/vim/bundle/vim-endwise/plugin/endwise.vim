@@ -16,6 +16,12 @@ augroup endwise " {{{1
         \ let b:endwise_words = 'function,do,then' |
         \ let b:endwise_pattern = '^\s*\zs\%(function\|do\|then\)\>\%(.*[^.:@$]\<end\>\)\@!\|\<then\|do\ze\%(\s*|.*|\)\=\s*$' |
         \ let b:endwise_syngroups = 'luaFunction,luaStatement,luaCond'
+  autocmd FileType elixir
+        \ let b:endwise_addition = '\=submatch(0)=="{" ? "}" : "end"' |
+        \ let b:endwise_words = 'case,cond,bc,lc,inlist,inbits,if,unless,try,receive,function' |
+                                                      
+        \ let b:endwise_pattern = '^\(.*=\)\?\s*\zs\%(case\|cond\|bc\|lc\|inlist\|inbits\|if\|unless\|try\|receive\|function\)\>\%(.*[^.:@$]\<end\>\)\@!\|\<do\ze\%(\s*|.*|\)\=\s*$' |
+        \ let b:endwise_syngroups = 'elixirKeyword'
   autocmd FileType ruby
         \ let b:endwise_addition = '\=submatch(0)=="{" ? "}" : "end"' |
         \ let b:endwise_words = 'module,class,def,if,unless,case,while,until,begin,do' |
@@ -63,10 +69,6 @@ if !exists('g:endwise_no_mappings')
   else
     imap <C-X><CR> <CR><Plug>AlwaysEnd
     imap <CR>      <CR><Plug>DiscretionaryEnd
-  endif
-
-  if maparg('<M-o>','i') == ''
-    inoremap <M-o> <C-O>o
   endif
 endif
 
