@@ -16,4 +16,3 @@ git://github.com/vim-scripts/AutoTag.git
 https://github.com/kchmck/vim-coffee-script.git
 https://github.com/bling/vim-airline
 https://github.com/scrooloose/nerdtree
-https://github.com/scrooloose/syntastic
