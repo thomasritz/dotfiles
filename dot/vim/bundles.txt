@@ -17,3 +17,4 @@ https://github.com/kchmck/vim-coffee-script.git
 https://github.com/bling/vim-airline
 https://github.com/scrooloose/nerdtree
 https://github.com/uggedal/go-vim
+git@github.com:leshill/vim-json.git
