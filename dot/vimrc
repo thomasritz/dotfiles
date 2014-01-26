@@ -92,6 +92,10 @@ augroup Ruby
   au BufRead,BufNewFile *.thor set filetype=ruby
 augroup END
 
+augroup Markdown
+  au BufRead,BufNewFile *.md set filetype=markdown
+augroup END
+
 augroup Java
   autocmd! FileType java setlocal path+=Java/*/src/**
 augroup END
