@@ -1,4 +1,4 @@
-" MIT License. Copyright (c) 2013 Bailey Ling.
+" MIT License. Copyright (c) 2013-2014 Bailey Ling.
 " vim: et ts=2 sts=2 sw=2
 
 " http://got-ravings.blogspot.com/2008/10/vim-pr0n-statusline-whitespace-flags.html
@@ -11,28 +11,31 @@ else
 endif
 
 let s:symbol = get(g:, 'airline#extensions#whitespace#symbol', g:airline_symbols.whitespace)
-let s:checks = get(g:, 'airline#extensions#whitespace#checks', ['indent', 'trailing'])
+let s:default_checks = ['indent', 'trailing']
 
 let s:trailing_format = get(g:, 'airline#extensions#whitespace#trailing_format', 'trailing[%s]')
 let s:mixed_indent_format = get(g:, 'airline#extensions#whitespace#mixed_indent_format', 'mixed-indent[%s]')
 
+let s:max_lines = get(g:, 'airline#extensions#whitespace#max_lines', 20000)
+
 let s:enabled = 1
 
 function! airline#extensions#whitespace#check()
-  if &readonly || !&modifiable || !s:enabled
+  if &readonly || !&modifiable || !s:enabled || line('$') > s:max_lines
     return ''
   endif
 
   if !exists('b:airline_whitespace_check')
     let b:airline_whitespace_check = ''
+    let checks = get(g:, 'airline#extensions#whitespace#checks', s:default_checks)
 
     let trailing = 0
-    if index(s:checks, 'trailing') > -1
+    if index(checks, 'trailing') > -1
       let trailing = search(' $', 'nw')
     endif
 
     let mixed = 0
-    if index(s:checks, 'indent') > -1
+    if index(checks, 'indent') > -1
       let indents = [search('^ \{2,}', 'nb'), search('^ \{2,}', 'n'), search('^\t', 'nb'), search('^\t', 'n')]
       let mixed = indents[0] != 0 && indents[1] != 0 && indents[2] != 0 && indents[3] != 0
     endif

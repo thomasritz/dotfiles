@@ -706,7 +706,7 @@ function! s:readable_calculate_file_type() dict abort
     else
       let r = "controller"
     endif
-  elseif f =~ '_api\.rb'
+  elseif f =~ '\<app/apis/.*_api\.rb'
     let r = "api"
   elseif f =~ '\<test/test_helper\.rb$'
     let r = "test"
@@ -833,7 +833,7 @@ function! s:app_default_locale() dict abort
     let candidates = map(filter(
           \ s:readfile(self.path('config/application.rb')) + s:readfile(self.path('config/environment.rb')),
           \ 'v:val =~ "^ *config.i18n.default_locale = :[\"'']\\=[A-Za-z-]\\+[\"'']\\= *$"'
-          \ ), 'matchstr(v:val,"[A-Za-z-]\\+[\"'']\\= *$")')
+          \ ), 'matchstr(v:val,"[A-Za-z-]\\+\\ze[\"'']\\= *$")')
     call self.cache.set('default_locale', get(candidates, 0, 'en'))
   endif
   return self.cache.get('default_locale')
@@ -2137,6 +2137,9 @@ function! s:RailsFind()
   let res = s:sub(s:sub(s:findasymbol('partial','\1'),'^/',''),'[^/]+$','_&')
   if res != ""|return res."\n".s:findview(res)|endif
 
+  let res = s:sub(s:sub(s:findfromview('json\.(\=\s*\%(:partial\s\+=>\|partial!\)\s*','\1'),'^/',''),'[^/]+$','_&')
+  if res != ""|return res."\n".s:findview(res)|endif
+
   let res = s:sub(s:sub(s:findfromview('render\s*(\=\s*\%(:partial\s\+=>\|partial:\)\s*','\1'),'^/',''),'[^/]+$','_&')
   if res != ""|return res."\n".s:findview(res)|endif
 
@@ -3201,8 +3204,15 @@ function! s:readable_alternate_candidates(...) dict abort
     return [migration . (exists('lastmethod') && !empty(lastmethod) ? '#'.lastmethod : '')]
   elseif f =~# '\<application\.js$'
     return ['app/helpers/application_helper.rb']
+  elseif f =~# 'spec\.js$'
+    return [s:sub(s:sub(f, 'spec/javascripts', 'app/assets/javascripts'), '_spec.js', '.js')."\n"]
   elseif self.type_name('javascript')
-    return ['app/assets/javascripts/application.js', 'public/javascripts/application.js']
+    if f =~ 'public/javascripts'
+      let to_replace = 'public/javascripts'
+    else
+      let to_replace = 'app/assets/javascripts'
+    endif
+    return [s:sub(s:sub(f, to_replace, 'spec/javascripts'), '.js', '_spec.js')."\n"]
   elseif self.type_name('db-schema') || f =~# '^db/\w\+_structure.sql$'
     return ['db/seeds.rb']
   elseif f ==# 'db/seeds.rb'
@@ -3724,7 +3734,9 @@ function! s:BufSyntax()
       unlet! b:current_syntax
       let removenorend = !exists("g:html_no_rendering")
       let g:html_no_rendering = 1
+      let isk = &l:iskeyword
       syn include @htmlTop syntax/xhtml.vim
+      let &l:iskeyword = isk
       if removenorend
           unlet! g:html_no_rendering
       endif
@@ -4474,9 +4486,6 @@ function! s:BufSettings()
       call self.setvar('surround_5',   "\r\nend")
       call self.setvar('surround_69',  "\1expr: \1\rend")
       call self.setvar('surround_101', "\r\nend")
-    endif
-    if exists(':UltiSnipsAddFiletypes') == 2
-      UltiSnipsAddFiletypes rails
     endif
   elseif ft =~# 'yaml\>' || fnamemodify(self.name(),':e') ==# 'yml'
     call self.setvar('&define',self.define_pattern())

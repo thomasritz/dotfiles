@@ -1,4 +1,4 @@
-" MIT License. Copyright (c) 2013 Bailey Ling.
+" MIT License. Copyright (c) 2013-2014 Bailey Ling.
 " vim: et ts=2 sts=2 sw=2
 
 let s:prototype = {}
@@ -6,6 +6,10 @@ let s:prototype = {}
 function! s:prototype.split(...)
   let self._side = 0
   let self._line .= '%#'.self._curgroup.'#'.(a:0 ? a:1 : '%=')
+endfunction
+
+function! s:prototype.add_section_spaced(group, contents)
+  call self.add_section(a:group, (g:airline_symbols.space).a:contents.(g:airline_symbols.space))
 endfunction
 
 function! s:prototype.add_section(group, contents)

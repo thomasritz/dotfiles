@@ -1,4 +1,4 @@
-" MIT License. Copyright (c) 2013 Bailey Ling.
+" MIT License. Copyright (c) 2013-2014 Bailey Ling.
 " vim: et ts=2 sts=2 sw=2
 
 call airline#init#bootstrap()
@@ -6,6 +6,7 @@ let s:spc = g:airline_symbols.space
 
 function! s:wrap_accent(part, value)
   if exists('a:part.accent')
+    call airline#highlighter#add_accent(a:part.accent)
     return '%#__accent_'.(a:part.accent).'#'.a:value.'%#__restore__#'
   endif
   return a:value

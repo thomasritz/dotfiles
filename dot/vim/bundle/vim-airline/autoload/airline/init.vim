@@ -1,4 +1,4 @@
-" MIT License. Copyright (c) 2013 Bailey Ling.
+" MIT License. Copyright (c) 2013-2014 Bailey Ling.
 " vim: et ts=2 sts=2 sw=2
 
 function! s:check_defined(variable, default)
@@ -61,7 +61,7 @@ function! airline#init#bootstrap()
         \ 'linenr': get(g:, 'airline_linecolumn_prefix', get(g:, 'airline_powerline_fonts', 0) ? "\ue0a1" : ':' ),
         \ 'branch': get(g:, 'airline_branch_prefix', get(g:, 'airline_powerline_fonts', 0) ? "\ue0a0" : ''),
         \ 'modified': '+',
-        \ 'space': "\ua0",
+        \ 'space': ' ',
         \ }, 'keep')
 
   call airline#parts#define('mode', {
@@ -76,9 +76,9 @@ function! airline#init#bootstrap()
         \ 'accent': 'red',
         \ })
   call airline#parts#define_raw('file', '%f%m')
-  call airline#parts#define_raw('linenr', (g:airline_symbols.linenr).'%#__accent_bold#%4l%#__restore__#')
+  call airline#parts#define_raw('linenr', '%{g:airline_symbols.linenr}%#__accent_bold#%4l%#__restore__#')
   call airline#parts#define_function('ffenc', 'airline#parts#ffenc')
-  call airline#parts#define_empty(['hunks', 'branch', 'tagbar', 'syntastic', 'whitespace'])
+  call airline#parts#define_empty(['hunks', 'branch', 'tagbar', 'syntastic', 'eclim', 'whitespace'])
 
   unlet g:airline#init#bootstrapping
 endfunction
@@ -107,7 +107,7 @@ function! airline#init#sections()
     let g:airline_section_z = airline#section#create(['%3p%%'.spc, 'linenr', ':%3c '])
   endif
   if !exists('g:airline_section_warning')
-    let g:airline_section_warning = airline#section#create(['syntastic', 'whitespace'])
+    let g:airline_section_warning = airline#section#create(['syntastic', 'eclim', 'whitespace'])
   endif
 endfunction
 

@@ -27,8 +27,8 @@ function! s:GetMakePrg()
   \      ' -c' .
   \      ' ' . b:coffee_litcoffee .
   \      ' ' . g:coffee_make_options .
-  \      ' ' . fnameescape(expand('%')) .
-  \      ' $*'
+  \      ' $*' .
+  \      ' ' . fnameescape(expand('%'))
 endfunction
 
 " Set `makeprg` and return 1 if coffee is still the compiler, else return 0.
@@ -75,8 +75,8 @@ augroup CoffeeUpdateMakePrg
 
   " Set autocmd locally if compiler was set locally.
   if &l:makeprg =~ s:pat
-    autocmd BufFilePost,BufWritePost <buffer> call s:UpdateMakePrg()
+    autocmd BufWritePre,BufFilePost <buffer> call s:UpdateMakePrg()
   else
-    autocmd BufFilePost,BufWritePost          call s:UpdateMakePrg()
+    autocmd BufWritePre,BufFilePost          call s:UpdateMakePrg()
   endif
 augroup END

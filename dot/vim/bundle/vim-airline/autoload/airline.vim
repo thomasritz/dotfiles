@@ -1,4 +1,4 @@
-" MIT License. Copyright (c) 2013 Bailey Ling.
+" MIT License. Copyright (c) 2013-2014 Bailey Ling.
 " vim: et ts=2 sts=2 sw=2
 
 let g:airline_statusline_funcrefs = get(g:, 'airline_statusline_funcrefs', [])
@@ -11,6 +11,12 @@ function! airline#add_statusline_func(name)
 endfunction
 
 function! airline#add_statusline_funcref(function)
+  if index(g:airline_statusline_funcrefs, a:function) >= 0
+    echohl WarningMsg
+    echo 'The airline statusline funcref '.string(a:function).' has already been added.'
+    echohl NONE
+    return
+  endif
   call add(g:airline_statusline_funcrefs, a:function)
 endfunction
 
@@ -114,7 +120,12 @@ function! s:invoke_funcrefs(context, funcrefs)
 endfunction
 
 function! airline#statusline(winnr)
-  return '%{airline#check_mode('.a:winnr.')}'.s:contexts[a:winnr].line
+  if has_key(s:contexts, a:winnr)
+    return '%{airline#check_mode('.a:winnr.')}'.s:contexts[a:winnr].line
+  endif
+
+  " in rare circumstances this happens...see #276
+  return ''
 endfunction
 
 function! airline#check_mode(winnr)
