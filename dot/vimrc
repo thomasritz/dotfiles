@@ -100,6 +100,12 @@ augroup Java
   autocmd! FileType java setlocal path+=Java/*/src/**
 augroup END
 
+let g:gofmt_command = "goimports"
+augroup Go
+  autocmd! FileType go  setlocal tabstop=2 shiftwidth=2 softtabstop=2 noexpandtab nolist
+  autocmd FileType go au BufWritePre <buffer> Fmt
+augroup END
+
 if has('gui_running')
   set guioptions-=T  " no toolbar
 endif
