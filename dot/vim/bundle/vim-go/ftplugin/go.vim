@@ -14,4 +14,9 @@ setlocal commentstring=//\ %s
 
 let b:undo_ftplugin = "setl com< cms<"
 
+" Set gocode completion
+setlocal omnifunc=go#complete#Complete
+
+compiler go
+
 " vim:ts=4:sw=4:et

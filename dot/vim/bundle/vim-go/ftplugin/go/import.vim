@@ -6,18 +6,18 @@
 "
 " This filetype plugin adds three new commands for go buffers:
 "
-"   :Import {path}
+"   :GoImport {path}
 "
 "       Import ensures that the provided package {path} is imported
 "       in the current Go buffer, using proper style and ordering.
 "       If {path} is already being imported, an error will be
 "       displayed and the buffer will be untouched.
 "
-"   :ImportAs {localname} {path}
+"   :GoImportAs {localname} {path}
 "
 "       Same as Import, but uses a custom local name for the package.
 "
-"   :Drop {path}
+"   :GoDrop {path}
 "
 "       Remove the import line for the provided package {path}, if
 "       present in the current Go buffer.  If {path} is not being
@@ -54,12 +54,13 @@ if !exists("g:go_import_commands")
 endif
 
 if g:go_import_commands
-    command! -buffer -nargs=? -complete=customlist,go#complete#Package Drop call s:SwitchImport(0, '', <f-args>)
-    command! -buffer -nargs=1 -complete=customlist,go#complete#Package Import call s:SwitchImport(1, '', <f-args>)
-    command! -buffer -nargs=* -complete=customlist,go#complete#Package ImportAs call s:SwitchImport(1, <f-args>)
+    command! -buffer -nargs=? -complete=customlist,go#package#Complete GoDrop call GoSwitchImport(0, '', <f-args>)
+    command! -buffer -nargs=1 -complete=customlist,go#package#Complete GoImport call GoSwitchImport(1, '', <f-args>)
+    command! -buffer -nargs=* -complete=customlist,go#package#Complete GoImportAs call GoSwitchImport(1, <f-args>)
 endif
 
-function! s:SwitchImport(enabled, localname, path)
+
+function! GoSwitchImport(enabled, localname, path)
     let view = winsaveview()
     let path = a:path
 
@@ -240,6 +241,7 @@ function! s:SwitchImport(enabled, localname, path)
     call winrestview(view)
 
 endfunction
+
 
 function! s:Error(s)
     echohl Error | echo a:s | echohl None
