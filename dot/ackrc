@@ -26,5 +26,5 @@
 --ignore-dir=build
 --sort-files
 --color
---follow
+--nofollow
 --group
