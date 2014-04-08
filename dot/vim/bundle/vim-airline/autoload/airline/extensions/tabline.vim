@@ -6,6 +6,8 @@ let s:excludes = get(g:, 'airline#extensions#tabline#excludes', [])
 let s:tab_nr_type = get(g:, 'airline#extensions#tabline#tab_nr_type', 0)
 let s:show_buffers = get(g:, 'airline#extensions#tabline#show_buffers', 1)
 let s:show_tab_nr = get(g:, 'airline#extensions#tabline#show_tab_nr', 1)
+let s:show_tab_type = get(g:, 'airline#extensions#tabline#show_tab_type', 1)
+let s:close_symbol = get(g:, 'airline#extensions#tabline#close_symbol', 'X')
 
 let s:builder_context = {
       \ 'active'        : 1,
@@ -31,6 +33,7 @@ function! airline#extensions#tabline#init(ext)
 
   autocmd User AirlineToggledOn call s:toggle_on()
   autocmd User AirlineToggledOff call s:toggle_off()
+  autocmd BufDelete * let s:current_bufnr = -1
 
   call s:toggle_on()
   call a:ext.add_theme_func('airline#extensions#tabline#load_theme')
@@ -263,8 +266,10 @@ function! s:get_tabs()
   call b.add_raw('%T')
   call b.add_section('airline_tabfill', '')
   call b.split()
-  call b.add_section('airline_tab', ' %999XX ')
-  call b.add_section('airline_tabtype', ' tabs ')
+  call b.add_section('airline_tab', ' %999X'.s:close_symbol.' ')
+  if s:show_tab_type
+    call b.add_section('airline_tabtype', ' tabs ')
+  endif
 
   let s:current_bufnr = curbuf
   let s:current_tabnr = curtab

@@ -168,7 +168,8 @@ function! airline#extensions#load()
   endif
 
   if (get(g:, 'airline#extensions#branch#enabled', 1) && get(g:, 'airline_enable_branch', 1))
-        \ && (exists('*fugitive#head') || exists('*lawrencium#statusline'))
+        \ && (exists('*fugitive#head') || exists('*lawrencium#statusline') ||
+        \     (get(g:, 'airline#extensions#branch#use_vcscommand', 0) && exists('*VCSCommandGetStatusLine')))
     call airline#extensions#branch#init(s:ext)
   endif
 
@@ -206,7 +207,8 @@ function! airline#extensions#load()
     call airline#extensions#promptline#init(s:ext)
   endif
 
-  " load all other extensions not part of the default distribution
+  " Load all other extensions, which are not part of the default distribution.
+  " (autoload/airline/extensions/*.vim outside of our s:script_path).
   for file in split(globpath(&rtp, "autoload/airline/extensions/*.vim"), "\n")
     " we have to check both resolved and unresolved paths, since it's possible
     " that they might not get resolved properly (see #187)

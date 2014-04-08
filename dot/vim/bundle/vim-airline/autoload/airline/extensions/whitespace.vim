@@ -31,24 +31,28 @@ function! airline#extensions#whitespace#check()
 
     let trailing = 0
     if index(checks, 'trailing') > -1
-      let trailing = search(' $', 'nw')
+      let trailing = search('\s$', 'nw')
     endif
 
     let mixed = 0
     if index(checks, 'indent') > -1
-      let indents = [search('^ \{2,}', 'nb'), search('^ \{2,}', 'n'), search('^\t', 'nb'), search('^\t', 'n')]
-      let mixed = indents[0] != 0 && indents[1] != 0 && indents[2] != 0 && indents[3] != 0
+      " [<tab>]<space><tab>
+      " Spaces before or between tabs are not allowed
+      let t_s_t = '(^\t* +\t\s*\S)'
+      " <tab>(<space> x count)
+      " Count of spaces at the end of tabs should be less then tabstop value
+      let t_l_s = '(^\t+ {' . &ts . ',}' . '\S)'
+      let mixed = search('\v' . t_s_t . '|' . t_l_s, 'nw')
     endif
 
-    if trailing != 0 || mixed
+    if trailing != 0 || mixed != 0
       let b:airline_whitespace_check = s:symbol
       if s:show_message
         if trailing != 0
           let b:airline_whitespace_check .= (g:airline_symbols.space).printf(s:trailing_format, trailing)
         endif
-        if mixed
-          let mixnr = indents[0] == indents[1] ? indents[0] : indents[2]
-          let b:airline_whitespace_check .= (g:airline_symbols.space).printf(s:mixed_indent_format, mixnr)
+        if mixed != 0
+          let b:airline_whitespace_check .= (g:airline_symbols.space).printf(s:mixed_indent_format, mixed)
         endif
       endif
     endif
