@@ -14,6 +14,11 @@
 " TODO(adonovan):
 " - reject buffers with no filename.
 " - hide all filenames in quickfix buffer.
+"
+if exists("g:go_loaded_oracle")
+  finish
+endif
+let g:go_loaded_oracle = 1
 
 func! s:qflist(output)
   let qflist = []
@@ -59,7 +64,7 @@ func! s:RunOracle(mode, selected) range abort
   elseif pkg != -1
      let sname = pkg
   else
-    let sname = fname
+    let sname = shellescape(fname)
   endif
 
   if a:selected != -1
@@ -67,12 +72,12 @@ func! s:RunOracle(mode, selected) range abort
     let pos2 = s:getpos(line("'>"), col("'>"))
     let cmd = printf('%s -pos=%s:#%d,#%d %s %s',
       \  g:go_oracle_bin,
-      \  shellescape(fname), pos1, pos2, a:mode, shellescape(sname))
+      \  shellescape(fname), pos1, pos2, a:mode, sname)
   else
     let pos = s:getpos(line('.'), col('.'))
     let cmd = printf('%s -pos=%s:#%d %s %s',
       \  g:go_oracle_bin,
-      \  shellescape(fname), pos, a:mode, shellescape(sname))
+      \  shellescape(fname), pos, a:mode, sname)
   endif
 
   let out = system(cmd)
@@ -83,15 +88,15 @@ func! s:RunOracle(mode, selected) range abort
   endif
 endfun
 
-" Describe the expression at the current point.
+" Describe selected syntax: definition, methods, etc
 command! -range=% GoOracleDescribe
   \ call s:RunOracle('describe', <count>)
 
-" Show possible callees of the function call at the current point.
+" Show possible targets of selected function call
 command! -range=% GoOracleCallees
   \ call s:RunOracle('callees', <count>)
 
-" Show the set of callers of the function containing the current point.
+" Show possible callers of selected function
 command! -range=% GoOracleCallers
   \ call s:RunOracle('callers', <count>)
 
@@ -99,13 +104,22 @@ command! -range=% GoOracleCallers
 command! -range=% GoOracleCallgraph
   \ call s:RunOracle('callgraph', <count>)
 
-" Describe the 'implements' relation for types in the
-" package containing the current point.
+" Show path from callgraph root to selected function
+command! -range=% GoOracleCallstack
+  \ call s:RunOracle('callstack', <count>)
+
+" Show free variables of selection
+command! -range=% GoOracleFreevars
+  \ call s:RunOracle('freevars', <count>)
+
+" Show 'implements' relation for selected package
 command! -range=% GoOracleImplements
   \ call s:RunOracle('implements', <count>)
 
-" Enumerate the set of possible corresponding sends/receives for
-" this channel receive/send operation.
+" Show send/receive corresponding to selected channel op
 command! -range=% GoOracleChannelPeers
   \ call s:RunOracle('peers', <count>)
 
+" Show all refs to entity denoted by selected identifier
+command! -range=% GoOracleReferrers
+  \ call s:RunOracle('referrers', <count>)

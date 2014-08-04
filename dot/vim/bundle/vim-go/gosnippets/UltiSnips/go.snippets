@@ -12,8 +12,9 @@ import (
 endsnippet
 
 snippet package "Package declaration" b
-// Package $1 provides ...
+// Package $1 provides ${2:...}
 package ${1:main}
+${0:${VISUAL}}
 endsnippet
 
 # Mostly converted from: https://github.com/AlanQuatermain/go-tmbundle
@@ -47,7 +48,13 @@ endsnippet
 
 # statements
 snippet for "For loop" b
-for ${1:condition}${1/(.+)/ /}{
+for ${1:condition} {
+	${0:${VISUAL}}
+}
+endsnippet
+
+snippet fori "Integer for loop" b
+for ${1:i} := 0; $1 < ${2:N}; $1++ {
 	${0:${VISUAL}}
 }
 endsnippet
@@ -134,10 +141,29 @@ snippet json "JSON field"
 \`json:"${1:displayName}"\`
 endsnippet
 
+snippet er "Error clause " !b
+if err != nil {
+	${0}
+}
+endsnippet
 
 snippet errn "Error return " !b
 if err != nil {
 	return err
+}
+${0}
+endsnippet
+
+snippet errn, "Error return with two return values" !b
+if err != nil {
+	return ${1:nil}, err
+}
+${0}
+endsnippet
+
+snippet errn,, "Error return with three return values" !b
+if err != nil {
+	return ${1:nil}, ${2:nil}, err
 }
 ${0}
 endsnippet
@@ -178,6 +204,12 @@ endsnippet
 
 snippet make "make allocation" !b
 make(${1:Type}, ${2:size})${0}
+endsnippet
+
+snippet test "test function" b
+func Test${1:Function}(t *testing.T) {
+	${2}
+}
 endsnippet
 
 # vim:ft=snippets:

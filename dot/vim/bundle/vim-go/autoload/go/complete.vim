@@ -16,6 +16,7 @@ fu! s:gocodeCurrentBuffer()
   endif
   let file = tempname()
   call writefile(buf, file)
+
   return file
 endf
 
@@ -42,6 +43,7 @@ fu! s:gocodeCommand(cmd, preargs, args)
   for i in range(0, len(a:preargs) - 1)
     let a:preargs[i] = s:gocodeShellescape(a:preargs[i])
   endfor
+
   let result = s:system(printf('%s %s %s %s', g:go_gocode_bin, join(a:preargs), a:cmd, join(a:args)))
   if v:shell_error != 0
     return "[\"0\", []]"
@@ -75,6 +77,49 @@ fu! s:gocodeAutocomplete()
   call delete(filename)
   return result
 endf
+
+function! go#complete#GetInfo()
+  let filename = s:gocodeCurrentBuffer()
+  let result = s:gocodeCommand('autocomplete',
+           \ [s:gocodeCurrentBufferOpt(filename), '-f=godit'],
+           \ [expand('%:p'), s:gocodeCursor()])
+  call delete(filename)
+
+	" first line is: Charcount,,NumberOfCandidates, i.e: 8,,1
+	" following lines are candiates, i.e:  func foo(name string),,foo(
+	let out = split(result, '\n')
+
+	" no candidates are found
+	if len(out) == 1
+		return
+	endif
+
+	" only one candiate is found
+	if len(out) == 2
+		return split(out[1], ',,')[0]
+	endif
+
+	" to many candidates are available, pick one that maches the word under the
+	" cursor
+	let infos = []
+	for info in out[1:]
+		call add(infos, split(info, ',,')[0])
+	endfor
+
+	let wordMatch = '\<' . expand("<cword>") . '\>'
+	let filtered =  filter(infos, "v:val =~ '".wordMatch."'")
+
+	if len(filtered) == 1
+		return filtered[0]
+	endif
+endfunction
+
+function! go#complete#Info()
+  let result = go#complete#GetInfo()
+  if len(result) > 0
+    echo "vim-go: " | echohl Function | echon result | echohl None
+  endif
+endfunction!
 
 fu! go#complete#Complete(findstart, base)
   "findstart = 1 when we need to get the text length
