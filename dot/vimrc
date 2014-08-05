@@ -104,6 +104,10 @@ augroup Go
   autocmd! FileType go  setlocal tabstop=8 shiftwidth=8 softtabstop=8 noexpandtab nolist
 augroup END
 
+augroup Folding
+  autocmd Syntax ruby setlocal foldmethod=syntax | normal zR
+augroup END
+
 if has('gui_running')
   set guioptions-=T  " no toolbar
 endif
