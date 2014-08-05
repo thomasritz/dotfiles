@@ -24,6 +24,7 @@
 --ignore-dir=output
 --ignore-dir=gen
 --ignore-dir=build
+--ignore-file=is:tags
 --sort-files
 --color
 --nofollow
