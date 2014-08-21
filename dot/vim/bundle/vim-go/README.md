@@ -1,13 +1,11 @@
 # vim-go
 
-Full featured Go (golang) support for Vim. Contains official misc/vim files.
-vim-go installs automatically all necessary binaries for providing seamless Vim
-integration . It comes with pre-defined sensible settings (like auto gofmt on
-save), has autocomplete, snippet support, improved syntax highlighting, go
-toolchain commands, etc... It's highly customizable and has settings for
-disabling/enabling features  easily. 
-
-
+Go (golang) support for Vim. Contains official misc/vim files. vim-go installs
+automatically all necessary binaries for providing seamless Vim integration.
+It comes with pre-defined sensible settings (like auto gofmt on save), has
+autocomplete, snippet support, improved syntax highlighting, go toolchain
+commands, etc... It's highly customizable and each individual feature can be
+disabled/enabled easily.
 
 ![vim-go](https://dl.dropboxusercontent.com/u/174404/vim-go.png)
 
@@ -23,6 +21,8 @@ disabling/enabling features  easily.
 * Compile and `go build` your package, install it with `go install`
 * `go run` quickly your current file/files
 * Run `go test` and see any errors in quickfix window
+* Create a coverage profile and display annotated source code in browser to see
+  which functions are covered.
 * Lint your code with `golint`
 * Run your code through `go vet` to catch static errors.
 * Advanced source analysis tool with `oracle`
@@ -104,13 +104,16 @@ Or open the Godoc in browser
 au FileType go nmap <Leader>gb <Plug>(go-doc-browser)
 ```
 
-Run commands, such as  `go run` with `<leader>r` for the current file or `go build` and `go test` for
-the current package with `<leader>b` and `<leader>t`.
+Run commands, such as  `go run` with `<leader>r` for the current file or `go
+build` and `go test` for the current package with `<leader>b` and `<leader>t`.
+Display a beautiful annotated source code to see which functions are covered
+with `<leader>c`.
 
 ```vim
 au FileType go nmap <leader>r <Plug>(go-run)
 au FileType go nmap <leader>b <Plug>(go-build)
 au FileType go nmap <leader>t <Plug>(go-test)
+au FileType go nmap <leader>c <Plug>(go-coverage)
 ```
 
 Replace `gd` (Goto Declaration) for the word under your cursor (replaces current buffer):
@@ -234,6 +237,44 @@ type foo struct {
 And many more! For the full list have a look at the
 [included snippets](https://github.com/fatih/vim-go/blob/master/gosnippets/):
 
+## Troubleshooting
+
+### I'm using Fish shell but have some problems using Vim-go
+
+First environment variables in Fish are applied differently, it should be like:
+
+	set -x GOPATH /your/own/gopath
+
+Second, Vim needs a POSIX compatible shell (more info here:
+https://github.com/dag/vim-fish#teach-a-vim-to-fish). If you use Fish to open
+vim, it will make certainx shell based commands fail (means vim-go will fail
+too). To overcome this problem change the default shell by adding the following
+into your .vimrc (on the top of the file):
+
+	if $SHELL =~ 'fish'
+	  set shell='/bin/sh'
+	endif
+
+or
+
+	set shell='/bin/sh'
+
+
+
+### I'm seeing weirds errors during the startup
+
+If you see errors like this:
+
+	Installing code.google.com/p/go.tools/cmd/goimports Error installing code.google.com/p/go.tools/cmd/goimports:
+	Installing code.google.com/p/rog-go/exp/cmd/godef Error installing code.google.com/p/rog-go/exp/cmd/godef:
+
+that means your local Go setup is broken or the remote website is down.  For
+example sometimes code.google.com times out. To test, just execute a simple go
+get:
+
+	go get code.google.com/p/go.tools/cmd/goimports
+
+You'll see a more detailed error. If this works, vim-go will work too.
 
 
 ## Why another plugin?
