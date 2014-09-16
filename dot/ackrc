@@ -12,6 +12,8 @@
 --type-set=plist=.plist
 --type-set=tmstuff=.tmproj,.tm_build_errors
 --type-set=ejs=.ejs
+--type-set=text=.txt
+--type-set=properties=.properties
 --nonib
 --notmstuff
 --noxcode
