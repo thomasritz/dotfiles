@@ -102,6 +102,15 @@ augroup END
 
 augroup Go
   autocmd! FileType go  setlocal tabstop=4 shiftwidth=4 softtabstop=4 noexpandtab nolist
+  let g:go_fmt_command = "goimports"
+  " Show type info for the word under your cursor:
+  au FileType go nmap <Leader>i <Plug>(go-info)
+  au FileType go nmap <leader>r <Plug>(go-run)
+  au FileType go nmap <leader>b <Plug>(go-build)
+  au FileType go nmap <leader>t <Plug>(go-test)
+  au FileType go nmap <leader>c <Plug>(go-coverage)
+  " Goto declaration:
+  au FileType go nmap gd <Plug>(go-def)
 augroup END
 
 if has('gui_running')
