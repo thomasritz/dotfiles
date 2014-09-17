@@ -101,7 +101,7 @@ augroup Java
 augroup END
 
 augroup Go
-  autocmd! FileType go  setlocal tabstop=8 shiftwidth=8 softtabstop=8 noexpandtab nolist
+  autocmd! FileType go  setlocal tabstop=4 shiftwidth=4 softtabstop=4 noexpandtab nolist
 augroup END
 
 if has('gui_running')
@@ -115,3 +115,7 @@ let g:ctrlp_extensions = ['tag', 'buffertag', 'line', 'changes', 'mixed']
 
 nmap <Leader>m :NERDTreeToggle<CR>
 nmap <Leader>n :NERDTreeFind<CR>
+
+let g:UltiSnipsExpandTrigger="<tab>"
+let g:UltiSnipsJumpForwardTrigger="<tab>"
+let g:UltiSnipsJumpBackwardTrigger="<s-tab>"
