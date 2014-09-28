@@ -121,7 +121,7 @@ endif
 
 lang en_US.UTF-8
 
-set wildignore+=*/.git/*,*/.hg/*,*/.svn/*,*/tmp/*,*/.output/*,*/.sass-cache/*,*/build/*,*/tags,*/db/*
+set wildignore+=*/tmp/*,*/.output/*,*/.sass-cache/*,*/build/*,*/db/*
 let g:ctrlp_extensions = ['tag', 'buffertag', 'line', 'changes', 'mixed']
 
 nmap <Leader>m :NERDTreeToggle<CR>
