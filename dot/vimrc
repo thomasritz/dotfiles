@@ -113,6 +113,7 @@ augroup Go
   au FileType go nmap <leader>l :GoLint<CR>
   " Goto declaration:
   au FileType go nmap gd <Plug>(go-def)
+  autocmd BufWritePost *.go GoLint
 augroup END
 
 if has('gui_running')
