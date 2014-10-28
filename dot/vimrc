@@ -109,6 +109,7 @@ augroup Go
   au FileType go nmap <leader>b <Plug>(go-build)
   au FileType go nmap <leader>t <Plug>(go-test)
   au FileType go nmap <leader>c <Plug>(go-coverage)
+  au FileType go nmap <Leader>e <Plug>(go-rename)
   " Go Lint
   au FileType go nmap <leader>l :GoLint<CR>
   " Goto declaration:
