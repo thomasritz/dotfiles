@@ -44,6 +44,7 @@ set wildmode=list:longest,list:full
 set list                " List mode: Show tabs as CTRL-I, show end of line with $.
 set listchars=tab:»\ ,extends:¤,trail:·
                         " Strings to use in 'list' mode.
+set nojoinspaces        " Insert only one space after a '.' when joining lines.
 
 " Activate syntax highlighting unless for vimdiff
 if !&diff
