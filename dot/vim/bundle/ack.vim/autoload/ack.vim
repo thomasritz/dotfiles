@@ -1,6 +1,36 @@
+if exists('g:ack_use_dispatch')
+  if g:ack_use_dispatch && !exists(':Dispatch')
+    call s:Warn('Dispatch not loaded! Falling back to g:ack_use_dispatch = 0.')
+    let g:ack_use_dispatch = 0
+  endif
+else
+  let g:ack_use_dispatch = 0
+end
+
 function! ack#Ack(cmd, args)
   redraw
-  echo "Searching ..."
+  let l:ackprg_run = g:ackprg
+
+  if a:cmd =~# '^l'
+    let l:using_loclist = 1
+  else
+    let l:using_loclist = 0
+  endif
+
+  if g:ack_use_dispatch && l:using_loclist
+    call s:Warn('Dispatch does not support location lists! Proceeding with quickfix...')
+    let l:using_loclist = 0
+  endif
+
+  if l:using_loclist
+    let s:handler = g:ack_lhandler
+    let s:apply_mappings = g:ack_apply_lmappings
+    let l:wintype = 'l'
+  else
+    let s:handler = g:ack_qhandler
+    let s:apply_mappings = g:ack_apply_qmappings
+    let l:wintype = 'c'
+  endif
 
   " If no pattern is provided, search for the word under the cursor
   if empty(a:args)
@@ -8,8 +38,6 @@ function! ack#Ack(cmd, args)
   else
     let l:grepargs = a:args . join(a:000, ' ')
   end
-  echom l:grepargs
-  let l:ackprg_run = g:ackprg
 
   " Format, used to manage column jump
   if a:cmd =~# '-g$'
@@ -24,6 +52,8 @@ function! ack#Ack(cmd, args)
   let &grepprg=l:ackprg_run
   let &grepformat=g:ackformat
 
+  echo "Searching ..."
+
   try
     " NOTE: we escape special chars, but not everything using shellescape to
     "       allow for passing arguments etc
@@ -34,48 +64,39 @@ function! ack#Ack(cmd, args)
     else
       silent execute a:cmd . " " . escape(l:grepargs, '|#%')
     endif
-
   finally
     let &grepprg=grepprg_bak
     let &grepformat=grepformat_bak
   endtry
 
-  if a:cmd =~# '^l'
-    let s:handler = g:ack_lhandler
-    let s:apply_mappings = g:ack_apply_lmappings
-    let s:close_cmd = ':lclose<CR>'
-  else
-    let s:handler = g:ack_qhandler
-    let s:apply_mappings = g:ack_apply_qmappings
-    let s:close_cmd = ':cclose<CR>'
-  endif
+  " Dispatch has no callback mechanism currently, we just have to display the
+  " list window early and wait for it to populate :-/
+  call ack#show_results(l:wintype)
+  call s:highlight(l:grepargs)
+endfunction
 
-  if !g:ack_use_dispatch
-    call ack#show_results()
-  else
-    copen
-  endif
-  call <SID>apply_maps()
-  call <SID>highlight(l:grepargs)
-
+function! ack#show_results(wintype)
+  execute s:handler
+  call s:apply_maps(a:wintype)
   redraw!
 endfunction
 
-function! ack#show_results()
-  execute s:handler
-endfunction
+" wintype param is either 'l' for location list, or 'c' for quickfix
+function! s:apply_maps(wintype)
+  let l:closemap = ':' . a:wintype . 'close<CR>'
 
-function! s:apply_maps()
-  let g:ack_mappings.q = s:close_cmd
+  let g:ack_mappings.q = l:closemap
 
-  execute "nnoremap <buffer> <silent> ? :call ack#quick_help()<CR>"
+  execute 'nnoremap <buffer> <silent> ? :call ack#quick_help(' . string(a:wintype) . ')<CR>'
 
   if s:apply_mappings && &ft == "qf"
     if g:ack_autoclose
+      " We just map the 'go' and 'gv' mappings to close on autoclose, wtf?
       for key_map in items(g:ack_mappings)
-        execute printf("nnoremap <buffer> <silent> %s %s", get(key_map, 0), get(key_map, 1) . s:close_cmd)
+        execute printf("nnoremap <buffer> <silent> %s %s", get(key_map, 0), get(key_map, 1) . l:closemap)
       endfor
-      execute "nnoremap <buffer> <silent> <CR> <CR>" . s:close_cmd
+
+      execute "nnoremap <buffer> <silent> <CR> <CR>" . l:closemap
     else
       for key_map in items(g:ack_mappings)
         execute printf("nnoremap <buffer> <silent> %s %s", get(key_map, 0), get(key_map, 1))
@@ -89,7 +110,7 @@ function! s:apply_maps()
   endif
 endfunction
 
-function! ack#quick_help()
+function! ack#quick_help(wintype)
   execute "edit " . globpath(&rtp, "doc/ack_quick_help.txt")
 
   silent normal gg
@@ -104,7 +125,8 @@ function! ack#quick_help()
   setlocal nowrap
   setlocal foldlevel=20
   setlocal foldmethod=diff
-  nnoremap <buffer> <silent> ? :q!<CR>:call ack#show_results()<CR>
+
+  exec 'nnoremap <buffer> <silent> ? :q!<CR>:call ack#show_results(' . string(a:wintype) . ')<CR>'
 endfunction
 
 function! s:highlight(args)
@@ -152,3 +174,7 @@ function! ack#AckWindow(cmd, args)
   let args = a:args . ' ' . join(files)
   call ack#Ack(a:cmd, args)
 endfunction
+
+function! s:Warn(msg)
+  echohl WarningMsg | echomsg 'Ack: ' . a:msg | echohl None
+endf
