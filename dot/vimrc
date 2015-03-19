@@ -107,13 +107,11 @@ augroup Go
   " Show type info for the word under your cursor:
   au FileType go nmap <Leader>i <Plug>(go-info)
   au FileType go nmap <leader>r <Plug>(go-run)
-  au FileType go nmap <leader>b <Plug>(go-build)
+  " au FileType go nmap <leader>b <Plug>(go-build)
   au FileType go nmap <leader>t <Plug>(go-test)
   au FileType go nmap <leader>c <Plug>(go-coverage)
   au FileType go nmap <Leader>e <Plug>(go-rename)
-  " Go Lint
   au FileType go nmap <leader>l :GoLint<CR>
-  " Goto declaration:
   au FileType go nmap gd <Plug>(go-def)
   autocmd BufWritePost *.go GoLint
 augroup END
@@ -126,6 +124,8 @@ lang en_US.UTF-8
 
 set wildignore+=*/tmp/*,*/.output/*,*/.sass-cache/*,*/build/*,*/db/*
 let g:ctrlp_extensions = ['tag', 'buffertag', 'line', 'changes', 'mixed']
+nmap <Leader>b :CtrlPBuffer<CR>
+nmap <Leader>B :CtrlPModified<CR>
 
 nmap <Leader>m :NERDTreeToggle<CR>
 nmap <Leader>n :NERDTreeFind<CR>
