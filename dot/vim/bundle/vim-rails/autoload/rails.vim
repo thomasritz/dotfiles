@@ -843,7 +843,7 @@ function! s:app_stylesheet_suffix() dict abort
     let candidates = map(filter(
           \ s:readfile(self.path('config/application.rb')),
           \ 'v:val =~ "^ *config.sass.preferred_syntax *= *:[A-Za-z-]\\+ *$"'
-          \ ), '".css.".matchstr(v:val,"[A-Za-z-]\\+\\ze *$")')
+          \ ), '".".matchstr(v:val,"[A-Za-z-]\\+\\ze *$")')
     call self.cache.set('stylesheet_suffix', get(candidates, 0, default))
   endif
   return self.cache.get('stylesheet_suffix')
@@ -3021,7 +3021,7 @@ function! s:javascriptEdit(cmd,...)
     elseif !isdirectory(rails#app().path('app/assets/javascripts'))
       return s:LegacyCommandEdit(a:cmd,name,'public/javascripts/','.js')
     elseif rails#app().has_gem('coffee-rails')
-      return s:LegacyCommandEdit(a:cmd,name,'app/assets/javascripts/','.js.coffee')
+      return s:LegacyCommandEdit(a:cmd,name,'app/assets/javascripts/','.coffee')
     else
       return s:LegacyCommandEdit(a:cmd,name,'app/assets/javascripts/','.js')
     endif
@@ -3848,7 +3848,7 @@ function! rails#buffer_syntax()
           exe "syn keyword rubyRailsUserMethod ".join(rails#app().user_assertions())
         endif
         syn keyword rubyRailsTestMethod refute refute_empty refute_equal refute_in_delta refute_in_epsilon refute_includes refute_instance_of refute_kind_of refute_match refute_nil refute_operator refute_predicate refute_respond_to refute_same
-        syn keyword rubyRailsTestMethod add_assertion assert assert_block assert_equal assert_in_delta assert_instance_of assert_kind_of assert_match assert_nil assert_no_match assert_not_equal assert_not_nil assert_not_same assert_nothing_raised assert_nothing_thrown assert_operator assert_raise assert_respond_to assert_same assert_send assert_throws assert_recognizes assert_generates assert_routing flunk fixtures fixture_path use_transactional_fixtures use_instantiated_fixtures assert_difference assert_no_difference assert_valid
+        syn keyword rubyRailsTestMethod add_assertion assert assert_block assert_equal assert_in_delta assert_instance_of assert_kind_of assert_match assert_nil assert_no_match assert_not assert_not_equal assert_not_nil assert_not_same assert_nothing_raised assert_nothing_thrown assert_operator assert_raise assert_respond_to assert_same assert_send assert_throws assert_recognizes assert_generates assert_routing flunk fixtures fixture_path use_transactional_fixtures use_instantiated_fixtures assert_difference assert_no_difference assert_valid
         syn keyword rubyRailsTestMethod test setup teardown
         if !buffer.type_name('test-unit')
           syn match   rubyRailsTestControllerMethod  '\.\@<!\<\%(get\|post\|put\|patch\|delete\|head\|process\|assigns\)\>'
@@ -4386,6 +4386,7 @@ function! s:BufAbbreviations()
     Rabbrev AS::  ActiveSupport
     Rabbrev AM::  ActionMailer
     Rabbrev AO::  ActiveModel
+    Rabbrev AJ::  ActiveJob
     " )))))
     for pairs in
           \ items(type(get(g:, 'rails_abbreviations', 0)) == type({}) ? g:rails_abbreviations : {})
