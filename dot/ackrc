@@ -27,6 +27,7 @@
 --ignore-dir=gen
 --ignore-dir=build
 --ignore-file=is:tags
+--ignore-file=ext:a
 --sort-files
 --color
 --nofollow
