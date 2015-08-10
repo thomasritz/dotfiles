@@ -7,7 +7,7 @@ snippet l_rsc "Laravel resource controller" b
  * \date        `!v strftime('%d-%m-%y')`
  */
 
-class ${1:`!v expand('%:t:r')`} extends ${2: BaseController} {
+class ${1:`!v expand('%:t:r')`} extends ${2:BaseController} {
     function __construct() {
     }
     
@@ -17,7 +17,7 @@ class ${1:`!v expand('%:t:r')`} extends ${2: BaseController} {
     public function create() {
     }
     
-    public function store($id) {
+    public function store() {
     }
     
     public function show($id) {

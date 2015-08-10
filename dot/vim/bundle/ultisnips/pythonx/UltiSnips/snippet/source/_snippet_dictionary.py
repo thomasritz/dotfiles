@@ -3,7 +3,6 @@
 
 """Implements a container for parsed snippets."""
 
-
 class SnippetDictionary(object):
 
     """See module docstring."""
@@ -11,7 +10,7 @@ class SnippetDictionary(object):
     def __init__(self):
         self._snippets = []
         self._cleared = {}
-        self._clear_priority = None
+        self._clear_priority = float("-inf")
 
     def add_snippet(self, snippet):
         """Add 'snippet' to this dictionary."""

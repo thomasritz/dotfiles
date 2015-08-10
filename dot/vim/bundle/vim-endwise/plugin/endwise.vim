@@ -42,9 +42,9 @@ augroup endwise " {{{1
         \ let b:endwise_pattern = '\%(\<End\>.*\)\@<!\<&\>' |
         \ let b:endwise_syngroups = 'vbStatement,vbnetStorage,vbnetProcedure,vbnet.*Words,AspVBSStatement'
   autocmd FileType vim
-        \ let b:endwise_addition = 'end&' |
-        \ let b:endwise_words = 'fu,fun,func,function,wh,while,if,for,try' |
-        \ let b:endwise_syngroups = 'vimFuncKey,vimNotFunc,vimCommand'
+        \ let b:endwise_addition = '\=submatch(0)=="augroup" ? submatch(0) . " END" : "end" . submatch(0)' |
+        \ let b:endwise_words = 'fu,fun,func,function,wh,while,if,for,try,au,augroup' |
+        \ let b:endwise_syngroups = 'vimFuncKey,vimNotFunc,vimCommand,vimAugroupKey'
   autocmd FileType c,cpp,xdefaults
         \ let b:endwise_addition = '#endif' |
         \ let b:endwise_words = 'if,ifdef,ifndef' |
@@ -59,6 +59,14 @@ augroup endwise " {{{1
         \ let b:endwise_addition = 'end' |
         \ let b:endwise_words = 'function,if,for' |
         \ let b:endwise_syngroups = 'matlabStatement,matlabFunction,matlabConditional,matlabRepeat'
+  autocmd FileType htmldjango
+        \ let b:endwise_addition = '{% end& %}' |
+        \ let b:endwise_words = 'autoescape,block\(\s\+\S*\)\?,blocktrans,cache,comment,filter,for,if,ifchanged,ifequal,ifnotequal,language,spaceless,verbatim,with' |
+        \ let b:endwise_syngroups = 'djangoTagBlock,djangoStatement'
+  autocmd FileType snippets
+        \ let b:endwise_addition = 'endsnippet' |
+        \ let b:endwise_words = 'snippet' |
+        \ let b:endwise_syngroups = 'snipSnippet,snipSnippetHeader,snipSnippetHeaderKeyword'
   autocmd FileType * call s:abbrev()
 augroup END " }}}1
 
@@ -69,6 +77,23 @@ function! s:abbrev()
     endfor
   endif
 endfunction
+
+function! s:teardownMappings()
+  inoremap <buffer> <C-X><CR> <C-X><CR>
+  inoremap <buffer> <CR> <CR>
+endfunction
+
+" Functions {{{1
+
+function! EndwiseDiscretionary()
+  return <SID>crend(0)
+endfunction
+
+function! EndwiseAlways()
+  return <SID>crend(1)
+endfunction
+
+" }}}1
 
 " Maps {{{1
 
@@ -92,6 +117,7 @@ if !exists('g:endwise_no_mappings')
     imap <script> <C-X><CR> <CR><SID>AlwaysEnd
     imap <CR> <CR><Plug>DiscretionaryEnd
   endif
+  autocmd endwise CmdwinEnter * call s:teardownMappings()
 endif
 
 " }}}1

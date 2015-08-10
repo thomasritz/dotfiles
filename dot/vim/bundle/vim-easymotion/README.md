@@ -1,6 +1,6 @@
 Vim motion on speed!
 =====
-[![Build Status](https://travis-ci.org/Lokaltog/vim-easymotion.svg?branch=master)](https://travis-ci.org/Lokaltog/vim-easymotion)
+[![Build Status](https://travis-ci.org/easymotion/vim-easymotion.svg?branch=master)](https://travis-ci.org/easymotion/vim-easymotion)
 
 ![Animated demonstration](https://f.cloud.github.com/assets/3797062/2039359/a8e938d6-899f-11e3-8789-60025ea83656.gif)
 
@@ -46,7 +46,7 @@ highlighted.
 
 EasyMotion is triggered by the provided mappings. This readme only covers the
 basics; please refer to
-[`:help easymotion.txt`](https://github.com/Lokaltog/vim-easymotion/blob/master/doc/easymotion.txt#L86)
+[`:help easymotion.txt`](https://github.com/easymotion/vim-easymotion/blob/master/doc/easymotion.txt#L86)
 to see all the available mappings.
 
 Important notes
@@ -180,7 +180,7 @@ map <Leader>j <Plug>(easymotion-j)
 map <Leader>k <Plug>(easymotion-k)
 map <Leader>h <Plug>(easymotion-linebackward)
 
-let g:EasyMotion_startofline = 0 " keep cursor colum when JK motion
+let g:EasyMotion_startofline = 0 " keep cursor column when JK motion
 ```
 
 ### Smartcase & Smartsign
@@ -267,17 +267,17 @@ Installation
 ------------
 ### Pathogen (https://github.com/tpope/vim-pathogen)
 ```
-git clone https://github.com/Lokaltog/vim-easymotion ~/.vim/bundle/vim-easymotion
+git clone https://github.com/easymotion/vim-easymotion ~/.vim/bundle/vim-easymotion
 ```
 
 ### Vundle (https://github.com/gmarik/vundle)
 ```
-Plugin 'Lokaltog/vim-easymotion'
+Plugin 'easymotion/vim-easymotion'
 ```
 
 ### NeoBundle (https://github.com/Shougo/neobundle.vim)
 ```
-NeoBundle 'Lokaltog/vim-easymotion'
+NeoBundle 'easymotion/vim-easymotion'
 ```
 
 Minimal Configuration Tutorial
@@ -318,4 +318,4 @@ Now, all you need to remember is `s` and JK motions bindings, and it's good enou
 
 Of course you can use any key you want instead of `s` such as `<Space>`, `<Leader>s`, etc...
 
-If you want to use more useful mappings, please see [:h easymotion.txt](https://github.com/Lokaltog/vim-easymotion/blob/master/doc/easymotion.txt) for more detail.
+If you want to use more useful mappings, please see [:h easymotion.txt](https://github.com/easymotion/vim-easymotion/blob/master/doc/easymotion.txt) for more detail.

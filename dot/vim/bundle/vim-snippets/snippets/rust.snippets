@@ -7,6 +7,10 @@ snippet fn "Function definition"
 	fn ${1:function_name}(${2})${3} {
 		${0}
 	}
+snippet pfn "Function definition"
+	pub fn ${1:function_name}(${2})${3} {
+		${0}
+	}
 snippet test "Unit test function"
 	#[test]
 	fn ${1:test_function_name}() {
@@ -106,12 +110,12 @@ snippet loop "loop {}" b
 	loop {
 		${0}
 	}
-snippet while "while loop"
+snippet wh "while loop"
 	while ${1:condition} {
 		${0}
 	}
 snippet for "for ... in ... loop"
-	for ${1:i} in ${2:0u..10} {
+	for ${1:i} in ${2} {
 		${0}
 	}
 # TODO commenting
