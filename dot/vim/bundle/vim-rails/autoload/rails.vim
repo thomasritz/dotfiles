@@ -2950,7 +2950,7 @@ function! s:viewEdit(cmd, ...) abort
   endif
 endfunction
 
-function! s:layoutEdit(cmd,...)
+function! s:layoutEdit(cmd,...) abort
   if a:0
     return s:viewEdit(a:cmd,"layouts/".a:1)
   endif
@@ -2958,7 +2958,7 @@ function! s:layoutEdit(cmd,...)
   if file ==# ""
     let file = "app/views/layouts/application.html.erb"
   endif
-  return s:edit(a:cmd,s:sub(file,'^/',''))
+  return s:edit(a:cmd, file)
 endfunction
 
 function! s:stylesheetEdit(cmd,...)
@@ -3829,7 +3829,7 @@ function! rails#buffer_syntax()
       endif
       if buffer.type_name('config-routes')
         syn match rubyRailsMethod '\.\zs\%(connect\|named_route\)\>'
-        syn keyword rubyRailsMethod match get put patch post delete redirect root resource resources collection member nested scope namespace controller constraints mount concern
+        syn keyword rubyRailsMethod match get put patch post delete redirect root resource resources collection member nested scope namespace controller constraints mount concern concerns
       endif
       syn keyword rubyRailsMethod debugger
       syn keyword rubyRailsMethod alias_attribute alias_method_chain attr_accessor_with_default attr_internal attr_internal_accessor attr_internal_reader attr_internal_writer concerning delegate mattr_accessor mattr_reader mattr_writer superclass_delegating_accessor superclass_delegating_reader superclass_delegating_writer with_options
@@ -4472,7 +4472,7 @@ function! s:extend_projection(dest, src) abort
     if !has_key(dest, key) && key ==# 'template'
       let dest[key] = [s:split(a:src[key])]
     elseif key ==# 'template'
-      let dest[key] += [s:split(a:src[key])]
+      let dest[key] = [s:split(a:src[key])] + dest[key]
     elseif !has_key(dest, key) || key ==# 'affinity'
       let dest[key] = a:src[key]
     elseif type(a:src[key]) == type({}) && type(dest[key]) == type({})
