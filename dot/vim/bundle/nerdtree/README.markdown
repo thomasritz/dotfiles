@@ -55,12 +55,18 @@ The following features and functionality are provided by the NERD tree:
 Installation
 ------------
 
-[pathogen.vim](https://github.com/tpope/vim-pathogen) is the recommended way to install nerdtree.
+####[pathogen.vim](https://github.com/tpope/vim-pathogen)
 
     cd ~/.vim/bundle
     git clone https://github.com/scrooloose/nerdtree.git
 
 Then reload vim, run `:Helptags`, and check out `:help NERD_tree.txt`.
+
+
+####[apt-vim](https://github.com/egalpin/apt-vim)
+
+    apt-vim install -y https://github.com/scrooloose/nerdtree.git
+
 
 
 Faq
@@ -100,7 +106,7 @@ Stick this in your vimrc to open NERDTree with `Ctrl+n` (you can set whatever ke
 
 Stick this in your vimrc:
 
-    autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTreeType") && b:NERDTreeType == "primary") | q | endif
+    autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
 
 > Can I have different highlighting for different file extensions?
 
