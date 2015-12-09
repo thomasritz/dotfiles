@@ -16,7 +16,7 @@ function! s:Creator._bindMappings()
     command! -buffer -complete=customlist,nerdtree#completeBookmarks -nargs=1 RevealBookmark :call nerdtree#ui_glue#revealBookmark('<args>')
     command! -buffer -complete=customlist,nerdtree#completeBookmarks -nargs=1 OpenBookmark :call nerdtree#ui_glue#openBookmark('<args>')
     command! -buffer -complete=customlist,nerdtree#completeBookmarks -nargs=* ClearBookmarks call nerdtree#ui_glue#clearBookmarks('<args>')
-    command! -buffer -complete=customlist,nerdtree#completeBookmarks -nargs=+ BookmarkToRoot call g:NERDTreeBookmark.ToRoot('<args>')
+    command! -buffer -complete=customlist,nerdtree#completeBookmarks -nargs=+ BookmarkToRoot call g:NERDTreeBookmark.ToRoot('<args>', b:NERDTree)
     command! -buffer -nargs=0 ClearAllBookmarks call g:NERDTreeBookmark.ClearAll() <bar> call b:NERDTree.render()
     command! -buffer -nargs=0 ReadBookmarks call g:NERDTreeBookmark.CacheBookmarks(0) <bar> call b:NERDTree.render()
     command! -buffer -nargs=0 WriteBookmarks call g:NERDTreeBookmark.Write()
@@ -62,13 +62,14 @@ function! s:Creator.createTabTree(name)
         if g:NERDTree.IsOpen()
             call g:NERDTree.Close()
         endif
-        unlet t:NERDTreeBufName
+
+        call self._removeTreeBufForTab()
     endif
 
     call self._createTreeWin()
     call self._createNERDTree(path, "tab")
     call b:NERDTree.render()
-    call b:NERDTreeRoot.putCursorHere(0, 0)
+    call b:NERDTree.root.putCursorHere(0, 0)
 
     call self._broadcastInitEvent()
 endfunction
@@ -141,7 +142,7 @@ function! s:Creator.createMirror()
     let i = 0
     while i < len(treeBufNames)
         let bufName = treeBufNames[i]
-        let treeRoot = getbufvar(bufName, "NERDTreeRoot")
+        let treeRoot = getbufvar(bufName, "NERDTree").root
         let options[i+1 . '. ' . treeRoot.path.str() . '  (buf name: ' . bufName . ')'] = bufName
         let i = i + 1
     endwhile
@@ -197,6 +198,15 @@ function! s:Creator._createTreeWin()
     call self._setCommonBufOptions()
 endfunction
 
+"FUNCTION: s:Creator._isBufHidden(nr) {{{1
+function! s:Creator._isBufHidden(nr)
+    redir => bufs
+    silent ls!
+    redir END
+
+    return bufs =~ a:nr . '..h'
+endfunction
+
 "FUNCTION: s:Creator.New() {{{1
 function! s:Creator.New()
     let newCreator = copy(self)
@@ -249,6 +259,23 @@ function! s:Creator._pathForString(str)
     endif
 
     return path
+endfunction
+
+" Function: s:Creator._removeTreeBufForTab()   {{{1
+function! s:Creator._removeTreeBufForTab()
+    let buf = bufnr(t:NERDTreeBufName)
+
+    "if &hidden is not set then it will already be gone
+    if buf != -1
+
+        "nerdtree buf may be mirrored/displayed elsewhere
+        if self._isBufHidden(buf)
+            exec "bwipeout " . buf
+        endif
+
+    endif
+
+    unlet t:NERDTreeBufName
 endfunction
 
 "FUNCTION: s:Creator._setCommonBufOptions() {{{1

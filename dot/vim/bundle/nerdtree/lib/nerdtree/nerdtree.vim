@@ -8,6 +8,28 @@ function! s:NERDTree.AddPathFilter(callback)
     call add(s:NERDTree.PathFilters(), a:callback)
 endfunction
 
+"FUNCTION: s:NERDTree.changeRoot(node) {{{1
+function! s:NERDTree.changeRoot(node)
+    if a:node.path.isDirectory
+        let self.root = a:node
+    else
+        call a:node.cacheParent()
+        let self.root = a:node.parent
+    endif
+
+    call self.root.open()
+
+    "change dir to the dir of the new root if instructed to
+    if g:NERDTreeChDirMode ==# 2
+        exec "cd " . self.root.path.str({'format': 'Edit'})
+    endif
+
+    call self.render()
+    call self.root.putCursorHere(0, 0)
+
+    silent doautocmd User NERDTreeNewRoot
+endfunction
+
 "FUNCTION: s:NERDTree.Close() {{{1
 "Closes the tab tree window for this tab
 function! s:NERDTree.Close()
@@ -73,13 +95,18 @@ endfunction
 " Function: s:NERDTree.ExistsForBuffer()   {{{1
 " Returns 1 if a nerd tree root exists in the current buffer
 function! s:NERDTree.ExistsForBuf()
-    return exists("b:NERDTreeRoot")
+    return exists("b:NERDTree")
 endfunction
 
 " Function: s:NERDTree.ExistsForTab()   {{{1
 " Returns 1 if a nerd tree root exists in the current tab
 function! s:NERDTree.ExistsForTab()
-    return exists("t:NERDTreeBufName")
+    if !exists("t:NERDTreeBufName")
+        return
+    end
+
+    "check b:NERDTree is still there and hasn't been e.g. :bdeleted
+    return !empty(getbufvar(bufnr(t:NERDTreeBufName), 'NERDTree'))
 endfunction
 
 function! s:NERDTree.ForCurrentBuf()
@@ -90,14 +117,29 @@ function! s:NERDTree.ForCurrentBuf()
     endif
 endfunction
 
+"FUNCTION: s:NERDTree.ForCurrentTab() {{{1
+function! s:NERDTree.ForCurrentTab()
+    if !s:NERDTree.ExistsForTab()
+        return
+    endif
+
+    let bufnr = bufnr(t:NERDTreeBufName)
+    return getbufvar(bufnr, "NERDTree")
+endfunction
+
+"FUNCTION: s:NERDTree.getRoot() {{{1
+function! s:NERDTree.getRoot()
+    return self.root
+endfunction
+
 "FUNCTION: s:NERDTree.GetWinNum() {{{1
 "gets the nerd tree window number for this tab
 function! s:NERDTree.GetWinNum()
     if exists("t:NERDTreeBufName")
         return bufwinnr(t:NERDTreeBufName)
-    else
-        return -1
     endif
+
+    return -1
 endfunction
 
 "FUNCTION: s:NERDTree.IsOpen() {{{1
@@ -126,7 +168,7 @@ endfunction
 function! s:NERDTree.New(path, type)
     let newObj = copy(self)
     let newObj.ui = g:NERDTreeUI.New(newObj)
-    let newObj.root = g:NERDTreeDirNode.New(a:path)
+    let newObj.root = g:NERDTreeDirNode.New(a:path, newObj)
     let newObj._type = a:type
     return newObj
 endfunction

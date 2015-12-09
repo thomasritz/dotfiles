@@ -27,12 +27,12 @@ function! s:UI._dumpHelp()
         let @h=@h."\" File node mappings~\n"
         let @h=@h."\" ". (g:NERDTreeMouseMode ==# 3 ? "single" : "double") ."-click,\n"
         let @h=@h."\" <CR>,\n"
-        if b:NERDTree.isTabTree()
+        if self.nerdtree.isTabTree()
             let @h=@h."\" ". g:NERDTreeMapActivateNode .": open in prev window\n"
         else
             let @h=@h."\" ". g:NERDTreeMapActivateNode .": open in current window\n"
         endif
-        if b:NERDTree.isTabTree()
+        if self.nerdtree.isTabTree()
             let @h=@h."\" ". g:NERDTreeMapPreview .": preview\n"
         endif
         let @h=@h."\" ". g:NERDTreeMapOpenInTab.": open in new tab\n"
@@ -116,7 +116,7 @@ function! s:UI._dumpHelp()
         let @h=@h."\" :ClearBookmarks [<names>]\n"
         let @h=@h."\" :ClearAllBookmarks\n"
         silent! put h
-    elseif g:NERDTreeMinimalUI == 0
+    elseif !self.isMinimal()
         let @h="\" Press ". g:NERDTreeMapHelp ." for help\n"
         silent! put h
     endif
@@ -155,18 +155,11 @@ function! s:UI.getPath(ln)
 
     "check to see if we have the root node
     if a:ln == rootLine
-        return b:NERDTreeRoot.path
-    endif
-
-    if !g:NERDTreeDirArrows
-        " in case called from outside the tree
-        if line !~# '^ *[|`'.g:NERDTreeDirArrowExpandable.g:NERDTreeDirArrowCollapsible.' ]' || line =~# '^$'
-            return {}
-        endif
+        return self.nerdtree.root.path
     endif
 
     if line ==# s:UI.UpDirLine()
-        return b:NERDTreeRoot.path.getParent()
+        return self.nerdtree.root.path.getParent()
     endif
 
     let indent = self._indentLevelFor(line)
@@ -189,7 +182,7 @@ function! s:UI.getPath(ln)
 
         "have we reached the top of the tree?
         if lnum == rootLine
-            let dir = b:NERDTreeRoot.path.str({'format': 'UI'}) . dir
+            let dir = self.nerdtree.root.path.str({'format': 'UI'}) . dir
             break
         endif
         if curLineStripped =~# '/$'
@@ -202,7 +195,7 @@ function! s:UI.getPath(ln)
             endif
         endif
     endwhile
-    let curFile = b:NERDTreeRoot.path.drive . dir . curFile
+    let curFile = self.nerdtree.root.path.drive . dir . curFile
     let toReturn = g:NERDTreePath.New(curFile)
     return toReturn
 endfunction
@@ -218,7 +211,7 @@ function! s:UI.getLineNum(file_node)
     let totalLines = line("$")
 
     "the path components we have matched so far
-    let pathcomponents = [substitute(b:NERDTreeRoot.path.str({'format': 'UI'}), '/ *$', '', '')]
+    let pathcomponents = [substitute(self.nerdtree.root.path.str({'format': 'UI'}), '/ *$', '', '')]
     "the index of the component we are searching for
     let curPathComponent = 1
 
@@ -287,13 +280,11 @@ endfunction
 
 "FUNCTION: s:UI._indentLevelFor(line) {{{1
 function! s:UI._indentLevelFor(line)
-    let level = match(a:line, '[^ \-+~'.g:NERDTreeDirArrowExpandable.g:NERDTreeDirArrowCollapsible.'`|]') / s:UI.IndentWid()
-    " check if line includes arrows
-    if match(a:line, '['.g:NERDTreeDirArrowExpandable.g:NERDTreeDirArrowCollapsible.']') > -1
-        " decrement level as arrow uses 3 ascii chars
-        let level = level - 1
-    endif
-    return level
+    "have to do this work around because match() returns bytes, not chars
+    let numLeadBytes = match(a:line, '\M\[^ '.g:NERDTreeDirArrowExpandable.g:NERDTreeDirArrowCollapsible.']')
+    let leadChars = strchars(a:line[0:numLeadBytes-1])
+
+    return leadChars / s:UI.IndentWid()
 endfunction
 
 "FUNCTION: s:UI.IndentWid() {{{1
@@ -306,19 +297,20 @@ function! s:UI.isIgnoreFilterEnabled()
     return self._ignoreEnabled == 1
 endfunction
 
+"FUNCTION: s:UI.isMinimal() {{{1
+function! s:UI.isMinimal()
+    return g:NERDTreeMinimalUI
+endfunction
+
 "FUNCTION: s:UI.MarkupReg() {{{1
 function! s:UI.MarkupReg()
-    if g:NERDTreeDirArrows
-        return '^\(['.g:NERDTreeDirArrowExpandable.g:NERDTreeDirArrowCollapsible.'] \| \+['.g:NERDTreeDirArrowExpandable.g:NERDTreeDirArrowCollapsible.'] \| \+\)'
-    endif
-
-    return '^[ `|]*[\-+~]'
+    return '^\(['.g:NERDTreeDirArrowExpandable.g:NERDTreeDirArrowCollapsible.'] \| \+['.g:NERDTreeDirArrowExpandable.g:NERDTreeDirArrowCollapsible.'] \| \+\)'
 endfunction
 
 "FUNCTION: s:UI._renderBookmarks {{{1
 function! s:UI._renderBookmarks()
 
-    if g:NERDTreeMinimalUI == 0
+    if !self.isMinimal()
         call setline(line(".")+1, ">----------Bookmarks----------")
         call cursor(line(".")+1, col("."))
     endif
@@ -426,7 +418,7 @@ function! s:UI.render()
     call self._dumpHelp()
 
     "delete the blank line before the help and add one after it
-    if g:NERDTreeMinimalUI == 0
+    if !self.isMinimal()
         call setline(line(".")+1, "")
         call cursor(line(".")+1, col("."))
     endif
@@ -436,19 +428,19 @@ function! s:UI.render()
     endif
 
     "add the 'up a dir' line
-    if !g:NERDTreeMinimalUI
+    if !self.isMinimal()
         call setline(line(".")+1, s:UI.UpDirLine())
         call cursor(line(".")+1, col("."))
     endif
 
     "draw the header line
-    let header = b:NERDTreeRoot.path.str({'format': 'UI', 'truncateTo': winwidth(0)})
+    let header = self.nerdtree.root.path.str({'format': 'UI', 'truncateTo': winwidth(0)})
     call setline(line(".")+1, header)
     call cursor(line(".")+1, col("."))
 
     "draw the tree
     let old_o = @o
-    let @o = b:NERDTreeRoot.renderToString()
+    let @o = self.nerdtree.root.renderToString()
     silent put o
     let @o = old_o
 
@@ -495,7 +487,7 @@ endfunction
 " toggles the use of the NERDTreeIgnore option
 function! s:UI.toggleIgnoreFilter()
     let self._ignoreEnabled = !self._ignoreEnabled
-    Vall self.renderViewSavingPosition()
+    call self.renderViewSavingPosition()
     call self.centerView()
 endfunction
 
@@ -504,7 +496,7 @@ endfunction
 function! s:UI.toggleShowBookmarks()
     let self._showBookmarks = !self._showBookmarks
     if self.getShowBookmarks()
-        call b:NERDTree.render()
+        call self.nerdtree.render()
         call g:NERDTree.CursorToBookmarkTable()
     else
         call self.renderViewSavingPosition()
