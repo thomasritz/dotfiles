@@ -138,6 +138,10 @@ function! EasyMotion#S(num_strokes, visualmode, direction) " {{{
     call s:EasyMotion(re, a:direction, a:visualmode ? visualmode() : '', is_inclusive)
     return s:EasyMotion_is_cancelled
 endfunction " }}}
+function! EasyMotion#OverwinF(num_strokes) " {{{
+    let re = s:findMotion(a:num_strokes, s:DIRECTION.bidirection)
+    return EasyMotion#overwin#move(re)
+endfunction "}}}
 function! EasyMotion#T(num_strokes, visualmode, direction) " {{{
     if a:direction == 1
         let is_inclusive = 0
@@ -205,8 +209,8 @@ function! EasyMotion#JK(visualmode, direction) " {{{
     if g:EasyMotion_startofline
         call s:EasyMotion('^\(\w\|\s*\zs\|$\)', a:direction, a:visualmode ? visualmode() : '', 0)
     else
-        let c = col('.')
-        let pattern = printf('^.\{-}\zs\(\%%<%dv.\%%>%dv\|$\)', c + 1, c)
+        let vcol  = EasyMotion#helper#vcol('.')
+        let pattern = printf('^.\{-}\zs\(\%%<%dv.\%%>%dv\|$\)', vcol + 1, vcol)
         call s:EasyMotion(pattern, a:direction, a:visualmode ? visualmode() : '', 0)
     endif
     return s:EasyMotion_is_cancelled
@@ -272,7 +276,8 @@ let s:config = {
 \   'visualmode': s:FALSE,
 \   'direction': s:DIRECTION.forward,
 \   'inclusive': s:FALSE,
-\   'accept_cursor_pos': s:FALSE
+\   'accept_cursor_pos': s:FALSE,
+\   'overwin': s:FALSE
 \ }
 
 function! s:default_config() abort
@@ -284,9 +289,13 @@ endfunction
 
 function! EasyMotion#go(...) abort
     let c = extend(s:default_config(), get(a:, 1, {}))
-    let s:current.is_operator = mode(1) ==# 'no' ? 1: 0
-    call s:EasyMotion(c.pattern, c.direction, c.visualmode ? visualmode() : '', c.inclusive, c)
-    return s:EasyMotion_is_cancelled
+    if c.overwin
+        return EasyMotion#overwin#move(c.pattern)
+    else
+        let s:current.is_operator = mode(1) ==# 'no' ? 1: 0
+        call s:EasyMotion(c.pattern, c.direction, c.visualmode ? visualmode() : '', c.inclusive, c)
+        return s:EasyMotion_is_cancelled
+    endif
 endfunction
 function! EasyMotion#User(pattern, visualmode, direction, inclusive, ...) " {{{
     let s:current.is_operator = mode(1) ==# 'no' ? 1: 0
@@ -391,7 +400,13 @@ endfunction " }}}
 " Helper Functions: {{{
 " -- Message -----------------------------
 function! s:Message(message) " {{{
-    echo 'EasyMotion: ' . a:message
+    if g:EasyMotion_verbose
+        echo 'EasyMotion: ' . a:message
+    else
+        " Make the current message dissapear
+        echo ''
+        " redraw
+    endif
 endfunction " }}}
 function! s:Prompt(message) " {{{
     echohl Question
@@ -1369,7 +1384,7 @@ function! s:EasyMotion(regexp, direction, visualmode, is_inclusive, ...) " {{{
         " if you just use cursor(s:current.cursor_position) to jump back,
         " current line will become middle of line window
         if ! empty(a:visualmode)
-            keepjumps call winrestview({'lnum' : win_first_line, 'topline' : win_first_line})
+            keepjumps call winrestview({'lnum' : s:current.cursor_position[0], 'topline' : win_first_line})
         else
             " for adjusting cursorline
             keepjumps call cursor(s:current.cursor_position)
@@ -1517,7 +1532,8 @@ function! s:EasyMotion(regexp, direction, visualmode, is_inclusive, ...) " {{{
         redraw
 
         " Show exception message
-        if g:EasyMotion_ignore_exception != 1
+        " The verbose option will take precedence
+        if g:EasyMotion_verbose == 1 && g:EasyMotion_ignore_exception != 1
             echo v:exception
         endif
 

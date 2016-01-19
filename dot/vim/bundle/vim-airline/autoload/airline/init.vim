@@ -1,4 +1,4 @@
-" MIT License. Copyright (c) 2013-2015 Bailey Ling.
+" MIT License. Copyright (c) 2013-2016 Bailey Ling.
 " vim: et ts=2 sts=2 sw=2
 
 function! s:check_defined(variable, default)
@@ -97,7 +97,7 @@ function! airline#init#sections()
     let g:airline_section_b = airline#section#create(['hunks', 'branch'])
   endif
   if !exists('g:airline_section_c')
-    if &autochdir == 1
+    if exists("+autochdir") && &autochdir == 1
       let g:airline_section_c = airline#section#create(['%<', 'path', spc, 'readonly'])
     else
       let g:airline_section_c = airline#section#create(['%<', 'file', spc, 'readonly'])
