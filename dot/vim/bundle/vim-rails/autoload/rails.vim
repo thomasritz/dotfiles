@@ -3701,7 +3701,7 @@ function! s:helpermethods()
   return ""
         \."action_name asset_path asset_url atom_feed audio_path audio_tag audio_url auto_discovery_link_tag "
         \."button_tag button_to "
-        \."cache cache_fragment_name cache_if cache_unless capture cdata_section check_box check_box_tag collection_check_boxes collection_radio_buttons collection_select color_field color_field_tag compute_asset_extname compute_asset_host compute_asset_path concat content_for content_tag content_tag_for controller controller_name controller_path convert_to_model cookies csrf_meta_tag csrf_meta_tags current_cycle cycle "
+        \."cache cache_fragment_name cache_if cache_unless capture cdata_section check_box check_box_tag collection_check_boxes collection_radio_buttons collection_select color_field color_field_tag compute_asset_extname compute_asset_host compute_asset_path concat content_for content_tag content_tag_for controller controller_name controller_path convert_to_model cookies csrf_meta_tag csrf_meta_tags current_cycle cycle action_cable_meta_tag "
         \."date_field date_field_tag date_select datetime_field datetime_field_tag datetime_local_field datetime_local_field_tag datetime_select debug distance_of_time_in_words distance_of_time_in_words_to_now div_for dom_class dom_id "
         \."email_field email_field_tag escape_javascript escape_once excerpt "
         \."favicon_link_tag field_set_tag fields_for file_field file_field_tag flash font_path font_url form_for form_tag "
@@ -3774,7 +3774,7 @@ function! rails#buffer_syntax()
         syn keyword rubyRailsARCallbackMethod after_create after_destroy after_save after_update after_validation after_validation_on_create after_validation_on_update
         syn keyword rubyRailsARCallbackMethod around_create around_destroy around_save around_update
         syn keyword rubyRailsARCallbackMethod after_commit after_find after_initialize after_rollback after_touch
-        syn keyword rubyRailsARClassMethod attr_accessible attr_protected attr_readonly has_secure_password store_accessor
+        syn keyword rubyRailsARClassMethod attr_accessible attr_protected attr_readonly has_secure_password has_secure_token store_accessor
         syn keyword rubyRailsARValidationMethod validate validates validate_on_create validate_on_update validates_acceptance_of validates_associated validates_confirmation_of validates_each validates_exclusion_of validates_format_of validates_inclusion_of validates_length_of validates_numericality_of validates_presence_of validates_absence_of validates_size_of validates_uniqueness_of validates_with
         syn keyword rubyRailsMethod logger
       endif
@@ -4525,6 +4525,10 @@ let s:default_projections = {
       \  "README": {"alternate": "config/database.yml"},
       \  "README.*": {"alternate": "config/database.yml"},
       \  "Rakefile": {"type": "task"},
+      \  "app/channels/*_channel.rb": {
+      \    "template": ["class {camelcase|capitalize|colons}Channel < ActionCable::Channel", "end"],
+      \    "type": "channel"
+      \  },
       \  "app/controllers/*_controller.rb": {
       \    "affinity": "controller",
       \    "template": [
