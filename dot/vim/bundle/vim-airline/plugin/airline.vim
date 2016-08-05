@@ -91,7 +91,7 @@ function! s:airline_toggle()
             \ call <sid>on_window_changed()
 
       autocmd VimResized * unlet! w:airline_lastmode | :call <sid>airline_refresh()
-      autocmd TabEnter * :unlet! w:airline_lastmode w:airline_active
+      autocmd TabEnter * :unlet! w:airline_lastmode | let w:airline_active=1
       autocmd BufWritePost */autoload/airline/themes/*.vim
             \ exec 'source '.split(globpath(&rtp, 'autoload/airline/themes/'.g:airline_theme.'.vim', 1), "\n")[0]
             \ | call airline#load_theme()
@@ -119,6 +119,10 @@ function! s:airline_theme(...)
 endfunction
 
 function! s:airline_refresh()
+  if !exists("#airline")
+    " disabled
+    return
+  endif
   let nomodeline=''
   if v:version > 703 || v:version == 703 && has("patch438")
     let nomodeline = '<nomodeline>'
