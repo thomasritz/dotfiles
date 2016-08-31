@@ -71,6 +71,9 @@ map <C-p> :bp<CR>
 " Ctrl-n: next buffer
 map <C-n> :bn<CR>
 
+" Save all buffers
+map <Leader>w :wa<CR>
+
 " Go over wrapped lines with j and k. These will jump to the next/previous
 " displayed line instead of the next/previous physical line.
 map j gj
