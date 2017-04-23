@@ -125,7 +125,7 @@ endif
 
 lang en_US.UTF-8
 
-set wildignore+=*/tmp/*,*/.output/*,*/.sass-cache/*,*/build/*,*/pkg/*,*/store/*
+set wildignore+=*/tmp/*,*/.output/*,*/.sass-cache/*,*/build/*,*/pkg/*,*/store/*,*/vendor/*,*/node_modules/*
 let g:ctrlp_extensions = ['tag', 'buffertag', 'line', 'changes', 'mixed']
 nmap <Leader>b :CtrlPBuffer<CR>
 nmap <Leader>B :CtrlPModified<CR>
