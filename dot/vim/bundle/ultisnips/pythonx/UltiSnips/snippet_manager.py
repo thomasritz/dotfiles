@@ -71,7 +71,7 @@ class SnippetManager(object):
         self._supertab_keys = None
 
         self._csnippets = []
-        self._buffer_filetypes = defaultdict(lambda: ['all'])
+        self._added_buffer_filetypes = defaultdict(lambda: [])
 
         self._vstate = VimState()
         self._visual_content = VisualContentPreserver()
@@ -81,7 +81,7 @@ class SnippetManager(object):
         self._snip_expanded_in_action = False
         self._inside_action = False
 
-        self._last_inserted_char = ''
+        self._last_change = ('', 0)
 
         self._added_snippets_source = AddedSnippetsSource()
         self.register_snippet_source('ultisnips_files', UltiSnipsFileSource())
@@ -255,15 +255,12 @@ class SnippetManager(object):
                     self._snippet_sources[index + 1:]
                 break
 
-    def reset_buffer_filetypes(self):
-        """Reset the filetypes for the current buffer."""
-        if _vim.buf.number in self._buffer_filetypes:
-            del self._buffer_filetypes[_vim.buf.number]
+    def get_buffer_filetypes(self):
+        return (self._added_buffer_filetypes[_vim.buf.number] +
+                _vim.buf.filetypes + ['all'])
 
     def add_buffer_filetypes(self, ft):
-        """Checks for changes in the list of snippet files or the contents of
-        the snippet files and reloads them if necessary."""
-        buf_fts = self._buffer_filetypes[_vim.buf.number]
+        buf_fts = self._added_buffer_filetypes[_vim.buf.number]
         idx = -1
         for ft in ft.split('.'):
             ft = ft.strip()
@@ -272,7 +269,7 @@ class SnippetManager(object):
             try:
                 idx = buf_fts.index(ft)
             except ValueError:
-                self._buffer_filetypes[_vim.buf.number].insert(idx + 1, ft)
+                self._added_buffer_filetypes[_vim.buf.number].insert(idx + 1, ft)
                 idx += 1
 
     @err_to_scratch_buffer.wrap
@@ -570,7 +567,7 @@ class SnippetManager(object):
         If partial is True, then get also return partial matches.
 
         """
-        filetypes = self._buffer_filetypes[_vim.buf.number][::-1]
+        filetypes = self.get_buffer_filetypes()[::-1]
         matching_snippets = defaultdict(list)
         clear_priority = None
         cleared = {}
@@ -792,9 +789,9 @@ class SnippetManager(object):
             filetypes.append(requested_ft)
         else:
             if bang:
-                filetypes.extend(self._buffer_filetypes[_vim.buf.number])
+                filetypes.extend(self.get_buffer_filetypes())
             else:
-                filetypes.append(self._buffer_filetypes[_vim.buf.number][0])
+                filetypes.append(self.get_buffer_filetypes()[0])
 
         for ft in filetypes:
             potentials.update(find_snippet_files(ft, snippet_dir))
@@ -838,14 +835,27 @@ class SnippetManager(object):
     def _track_change(self):
         self._should_update_textobjects = True
 
-        inserted_char = _vim.eval('v:char')
+        try:
+            inserted_char = _vim.as_unicode(_vim.eval('v:char'))
+        except UnicodeDecodeError:
+            return
+
+        if sys.version_info >= (3, 0):
+            if isinstance(inserted_char, bytes):
+                return
+        else:
+            if not isinstance(inserted_char, unicode):
+                return
+
         try:
             if inserted_char == '':
                 before = _vim.buf.line_till_cursor
-                if before and before[-1] == self._last_inserted_char:
+
+                if before and before[-1] == self._last_change[0] or \
+                        self._last_change[1] != vim.current.window.cursor[0]:
                     self._try_expand(autotrigger_only=True)
         finally:
-            self._last_inserted_char = inserted_char
+            self._last_change = (inserted_char, vim.current.window.cursor[0])
 
         if self._should_reset_visual and self._visual_content.mode == '':
             self._visual_content.reset()

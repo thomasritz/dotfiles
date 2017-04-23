@@ -1,16 +1,16 @@
 snippet do
 	do
-		${0}
+		${0:${VISUAL}}
 	end
 snippet if if .. do .. end
 	if ${1} do
-		${0}
+		${0:${VISUAL}}
 	end
 snippet if: if .. do: ..
 	if ${1:condition}, do: ${0}
 snippet ife if .. do .. else .. end
 	if ${1:condition} do
-		${2}
+		${2:${VISUAL}}
 	else
 		${0}
 	end
@@ -18,13 +18,13 @@ snippet ife: if .. do: .. else:
 	if ${1:condition}, do: ${2}, else: ${0}
 snippet unless unless .. do .. end
 	unless ${1} do
-		${0}
+		${0:${VISUAL}}
 	end
 snippet unless: unless .. do: ..
 	unless ${1:condition}, do: ${0}
 snippet unlesse unless .. do .. else .. end
 	unless ${1:condition} do
-		${2}
+		${2:${VISUAL}}
 	else
 		${0}
 	end
@@ -33,7 +33,7 @@ snippet unlesse: unless .. do: .. else:
 snippet cond
 	cond do
 		${1} ->
-			${0}
+		${0:${VISUAL}}
 	end
 snippet case
 	case ${1} do
@@ -48,6 +48,31 @@ snippet fori
 	for ${1:item} <- ${2:items}, into: ${3} do
 		${0}
 	end
+snippet wi
+	with(
+		${1:item} <- ${2:items}
+	) do
+		${0}
+	end
+snippet wie
+	with(
+		${1:item} <- ${2:items}
+	) do
+		${3}
+	else
+		${4} ->
+			${0}
+	end
+snippet sp
+	@spec ${1:name}(${2:args}) :: ${3:returns}
+snippet op
+	@opaque ${1:type_name} :: ${2:type}
+snippet ty
+	@type ${1:type_name} :: ${2:type}
+snippet typ
+	@typep ${1:type_name} :: ${2:type}
+snippet cb
+	@callback ${1:name}(${2:args}) :: ${3:returns}
 snippet df
 	def ${1:name}, do: ${2}
 snippet def
@@ -73,6 +98,8 @@ snippet defmo
 	defmodule ${1:`substitute(vim_snippets#Filename(), '\(_\|^\)\(.\)', '\u\2', 'g')`} do
 		${0}
 	end
+snippet dfp
+	defp ${1:name}, do: ${2}
 snippet defp
 	defp ${1:name} do
 		${0}
@@ -85,6 +112,8 @@ snippet doc
 	@doc """
 	${0}
 	"""
+snippet docf
+	@doc false
 snippet fn
 	fn ${1:args} -> ${0} end
 snippet mdoc
@@ -124,7 +153,7 @@ snippet exunit
 	end
 snippet try try .. rescue .. end
 	try do
-		${1}
+		${1:${VISUAL}}
 	rescue
 		${2} -> ${0}
 	end
