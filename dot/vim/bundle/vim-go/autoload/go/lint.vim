@@ -123,12 +123,11 @@ function! go#lint#Golint(...) abort
   endif
 
   if a:0 == 0
-    let goargs = shellescape(expand('%'))
+    let out = go#util#System(bin_path)
   else
-    let goargs = go#util#Shelljoin(a:000)
+    let out = go#util#System(bin_path . " " . go#util#Shelljoin(a:000))
   endif
 
-  let out = go#util#System(bin_path . " " . goargs)
   if empty(out)
     echon "vim-go: " | echohl Function | echon "[lint] PASS" | echohl None
     return
@@ -172,13 +171,13 @@ endfunction
 " the location list
 function! go#lint#Errcheck(...) abort
   if a:0 == 0
-    let goargs = go#package#ImportPath(expand('%:p:h'))
-    if goargs == -1
+    let import_path = go#package#ImportPath()
+    if import_path == -1
       echohl Error | echomsg "vim-go: package is not inside GOPATH src" | echohl None
       return
     endif
   else
-    let goargs = go#util#Shelljoin(a:000)
+    let import_path = go#util#Shelljoin(a:000)
   endif
 
   let bin_path = go#path#CheckBinPath(g:go_errcheck_bin)
@@ -189,7 +188,7 @@ function! go#lint#Errcheck(...) abort
   echon "vim-go: " | echohl Identifier | echon "errcheck analysing ..." | echohl None
   redraw
 
-  let command = bin_path . ' -abspath ' . goargs
+  let command = bin_path . ' -abspath ' . import_path
   let out = go#tool#ExecuteInDir(command)
 
   let l:listtype = "quickfix"
@@ -200,7 +199,6 @@ function! go#lint#Errcheck(...) abort
     call go#list#ParseFormat(l:listtype, errformat, split(out, "\n"), 'Errcheck')
 
     let errors = go#list#Get(l:listtype)
-
     if empty(errors)
       echohl Error | echomsg "GoErrCheck returned error" | echohl None
       echo out
@@ -208,6 +206,7 @@ function! go#lint#Errcheck(...) abort
     endif
 
     if !empty(errors)
+      echohl Error | echomsg "GoErrCheck found errors" | echohl None
       call go#list#Populate(l:listtype, errors, 'Errcheck')
       call go#list#Window(l:listtype, len(errors))
       if !empty(errors)
@@ -252,12 +251,20 @@ function s:lint_job(args)
   function! s:callback(chan, msg) closure
     let old_errorformat = &errorformat
     let &errorformat = l:errformat
-    caddexpr a:msg
+    if l:listtype == "locationlist"
+      lad a:msg
+    elseif l:listtype == "quickfix"
+      caddexpr a:msg
+    endif
     let &errorformat = old_errorformat
 
-    " TODO(arslan): cursor still jumps to first error even If I don't want
-    " it. Seems like there is a regression somewhere, but not sure where.
-    copen
+    " TODO(jinleileiking): give a configure to jump or not
+    let l:winnr = winnr()
+
+    let errors = go#list#Get(l:listtype)
+    call go#list#Window(l:listtype, len(errors))
+
+    exe l:winnr . "wincmd w"
   endfunction
 
   function! s:exit_cb(job, exitval) closure
