@@ -3,7 +3,10 @@
 
 scriptencoding utf-8
 
-let s:is_win32term = (has('win32') || has('win64')) && !has('gui_running') && (empty($CONEMUBUILD) || &term !=? 'xterm')
+let s:is_win32term = (has('win32') || has('win64')) &&
+                   \ !has('gui_running') &&
+                   \ (empty($CONEMUBUILD) || &term !=? 'xterm') &&
+                   \ !(exists("+termguicolors") && &termguicolors)
 
 let s:separators = {}
 let s:accents = {}
@@ -59,6 +62,15 @@ function! airline#highlighter#get_highlight2(fg, bg, ...)
   return s:get_array(fg, bg, a:000)
 endfunction
 
+function! s:hl_group_exists(group)
+  if !hlexists(a:group)
+    return 0
+  elseif empty(synIDattr(hlID(a:group), 'fg'))
+    return 0
+  endif
+  return 1
+endfunction
+
 function! airline#highlighter#exec(group, colors)
   if pumvisible()
     return
@@ -72,8 +84,13 @@ function! airline#highlighter#exec(group, colors)
   if len(colors) == 4
     call add(colors, '')
   endif
+  if g:airline_gui_mode ==# 'gui'
+    let new_hi = [colors[0], colors[1], '', '', colors[4]]
+  else
+    let new_hi = ['', '', printf("%s", colors[2]), printf("%s", colors[3]), colors[4]]
+  endif
   let colors = s:CheckDefined(colors)
-  if old_hi != colors || !hlexists(a:group)
+  if old_hi != new_hi || !s:hl_group_exists(a:group)
     let cmd = printf('hi %s %s %s %s %s %s %s %s',
         \ a:group, s:Get(colors, 0, 'guifg=', ''), s:Get(colors, 1, 'guibg=', ''),
         \ s:Get(colors, 2, 'ctermfg=', ''), s:Get(colors, 3, 'ctermbg=', ''),
@@ -185,6 +202,11 @@ function! airline#highlighter#highlight(modes, ...)
   let mapped = map(a:modes, 'v:val == a:modes[0] ? v:val : a:modes[0]."_".v:val')
   let suffix = a:modes[0] == 'inactive' ? '_inactive' : ''
   for mode in mapped
+    if mode == 'inactive' && winnr('$') == 1
+      " there exist no inactive windows, don't need to create all those
+      " highlighting groups
+      continue
+    endif
     if exists('g:airline#themes#{g:airline_theme}#palette[mode]')
       let dict = g:airline#themes#{g:airline_theme}#palette[mode]
       for kvp in items(dict)
@@ -222,4 +244,3 @@ function! airline#highlighter#highlight(modes, ...)
     endif
   endfor
 endfunction
-

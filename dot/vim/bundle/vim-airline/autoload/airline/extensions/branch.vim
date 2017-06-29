@@ -29,6 +29,7 @@ let s:vcs_config = {
 \    'cmd': 'git status --porcelain -- ',
 \    'untracked_mark': '??',
 \    'update_branch': 's:update_git_branch',
+\    'exclude': '\.git',
 \    'branch': '',
 \    'untracked': {},
 \  },
@@ -36,6 +37,7 @@ let s:vcs_config = {
 \    'exe': 'hg',
 \    'cmd': 'hg status -u -- ',
 \    'untracked_mark': '?',
+\    'exclude': '\.hg',
 \    'update_branch': 's:update_hg_branch',
 \    'branch': '',
 \    'untracked': {},
@@ -165,6 +167,10 @@ function! s:update_untracked()
 
   let l:needs_update = 1
   for vcs in keys(s:vcs_config)
+    if l:file =~ s:vcs_config[vcs].exclude
+      " Skip check for files that live in the exclude directory
+      let l:needs_update = 0
+    endif
     if has_key(s:vcs_config[vcs].untracked, l:file)
       let l:needs_update = 0
       call s:update_untracked_in_buffer_config(l:file, vcs)
@@ -303,7 +309,7 @@ function! airline#extensions#branch#head()
     if !empty(b:airline_head)
       let b:airline_head .= ' | '
     endif
-    let b:airline_head .= (len(l:heads) > 1 ? s:vcs_config[l:vcs].exe : '') . s:format_name(l:heads[l:vcs])
+    let b:airline_head .= (len(l:heads) > 1 ? s:vcs_config[l:vcs].exe .':' : '') . s:format_name(l:heads[l:vcs])
     let b:airline_head .= b:buffer_vcs_config[vcs].untracked
   endfor
 
