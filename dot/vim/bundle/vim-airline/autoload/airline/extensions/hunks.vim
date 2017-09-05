@@ -63,13 +63,14 @@ function! airline#extensions#hunks#get_hunks()
   if !get(w:, 'airline_active', 0)
     return ''
   endif
-  " Cache vavlues, so that it isn't called too often
+  " Cache values, so that it isn't called too often
   if exists("b:airline_hunks") &&
     \ get(b:,  'airline_changenr', 0) == b:changedtick &&
     \ winwidth(0) == get(s:, 'airline_winwidth', 0) &&
     \ get(b:, 'source_func', '') isnot# 's:get_hunks_signify' &&
     \ get(b:, 'source_func', '') isnot# 's:get_hunks_gitgutter' &&
-    \ get(b:, 'source_func', '') isnot# 's:get_hunks_empty'
+    \ get(b:, 'source_func', '') isnot# 's:get_hunks_empty' &&
+    \ get(b:, 'source_func', '') isnot# 's:get_hunks_changes'
     return b:airline_hunks
   endif
   let hunks = s:get_hunks()

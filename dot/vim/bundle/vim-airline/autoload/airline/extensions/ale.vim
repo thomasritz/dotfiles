@@ -16,17 +16,6 @@ function! airline#extensions#ale#get(type)
   let is_err = a:type ==# 'error'
   let symbol = is_err ? s:error_symbol : s:warning_symbol
 
-  if !exists('b:airline_extensions_ale_dict')
-    let b:airline_extensions_ale_dict = {}
-    let b:airline_extensions_ale_dict.error  = 0
-    let b:airline_extensions_ale_dict.warning = 0
-    let b:airline_extensions_ale_dict.change = 0
-  endif
-
-  if b:airline_extensions_ale_dict.change == b:changedtick
-    return s:airline_ale_count(b:airline_extensions_ale_dict[a:type], symbol)
-  endif
-
   let is_err = a:type ==# 'error'
   let counts = ale#statusline#Count(bufnr(''))
   let symbol = is_err ? s:error_symbol : s:warning_symbol
@@ -39,9 +28,6 @@ function! airline#extensions#ale#get(type)
     " Use the old List format.
     let num = is_err ? counts[0] : counts[1]
   endif
-
-  let b:airline_extensions_ale_dict[a:type] = num
-  let b:airline_extensions_ale_dict['change'] = b:changedtick
 
   return s:airline_ale_count(num, symbol)
 endfunction
@@ -57,4 +43,14 @@ endfunction
 function! airline#extensions#ale#init(ext)
   call airline#parts#define_function('ale_error_count', 'airline#extensions#ale#get_error')
   call airline#parts#define_function('ale_warning_count', 'airline#extensions#ale#get_warning')
+  augroup airline_ale
+    autocmd!
+    autocmd CursorHold,BufWritePost * call <sid>ale_refresh()
+  augroup END
+endfunction
+
+function! s:ale_refresh()
+  if get(g:, 'airline_skip_empty_sections', 0)
+    exe ':AirlineRefresh'
+  endif
 endfunction
