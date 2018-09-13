@@ -23,22 +23,15 @@ function! nerdtree#ui_glue#createDefaultBindings()
     call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapOpenSplit, 'scope': "Node", 'callback': s."openHSplit" })
     call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapOpenVSplit, 'scope': "Node", 'callback': s."openVSplit" })
 
-    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapOpenSplit, 'scope': "Bookmark", 'callback': s."openHSplit" })
-    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapOpenVSplit, 'scope': "Bookmark", 'callback': s."openVSplit" })
-
     call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapPreview, 'scope': "Node", 'callback': s."previewNodeCurrent" })
     call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapPreviewVSplit, 'scope': "Node", 'callback': s."previewNodeVSplit" })
     call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapPreviewSplit, 'scope': "Node", 'callback': s."previewNodeHSplit" })
 
-    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapPreview, 'scope': "Bookmark", 'callback': s."previewNodeCurrent" })
-    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapPreviewVSplit, 'scope': "Bookmark", 'callback': s."previewNodeVSplit" })
-    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapPreviewSplit, 'scope': "Bookmark", 'callback': s."previewNodeHSplit" })
-
     call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapOpenRecursively, 'scope': "DirNode", 'callback': s."openNodeRecursively" })
 
-    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapUpdir, 'scope': "all", 'callback': s."upDirCurrentRootClosed" })
-    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapUpdirKeepOpen, 'scope': "all", 'callback': s."upDirCurrentRootOpen" })
-    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapChangeRoot, 'scope': "Node", 'callback': s."chRoot" })
+    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapUpdir, 'scope': 'all', 'callback': s . 'upDirCurrentRootClosed' })
+    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapUpdirKeepOpen, 'scope': 'all', 'callback': s . 'upDirCurrentRootOpen' })
+    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapChangeRoot, 'scope': 'Node', 'callback': s . 'chRoot' })
 
     call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapChdir, 'scope': "Node", 'callback': s."chCwd" })
 
@@ -68,10 +61,10 @@ function! nerdtree#ui_glue#createDefaultBindings()
     call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapJumpNextSibling, 'scope': "Node", 'callback': s."jumpToNextSibling" })
     call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapJumpPrevSibling, 'scope': "Node", 'callback': s."jumpToPrevSibling" })
 
-    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapOpenInTab, 'scope': "Node", 'callback': s."openInNewTab" })
-    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapOpenInTabSilent, 'scope': "Node", 'callback': s."openInNewTabSilent" })
-    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapOpenInTab, 'scope': "Bookmark", 'callback': s."openInNewTab" })
-    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapOpenInTabSilent, 'scope': "Bookmark", 'callback': s."openInNewTabSilent" })
+    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapOpenInTab, 'scope': 'Node', 'callback': s . 'openInNewTab' })
+    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapOpenInTabSilent, 'scope': 'Node', 'callback': s . 'openInNewTabSilent' })
+    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapOpenInTab, 'scope': 'Bookmark', 'callback': s . 'openInNewTab' })
+    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapOpenInTabSilent, 'scope': 'Bookmark', 'callback': s . 'openInNewTabSilent' })
 
     call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapOpenExpl, 'scope': "DirNode", 'callback': s."openExplorer" })
 
@@ -90,10 +83,15 @@ function! s:activateAll()
     endif
 endfunction
 
-"FUNCTION: s:activateDirNode() {{{1
-"handle the user activating a tree node
-function! s:activateDirNode(node)
-    call a:node.activate()
+" FUNCTION: s:activateDirNode(directoryNode) {{{1
+function! s:activateDirNode(directoryNode)
+
+    if a:directoryNode.isRoot() && a:directoryNode.isOpen
+        call nerdtree#echo('cannot close tree root')
+        return
+    endif
+
+    call a:directoryNode.activate()
 endfunction
 
 "FUNCTION: s:activateFileNode() {{{1
@@ -144,18 +142,9 @@ function! s:chRoot(node)
 endfunction
 
 " FUNCTION: s:nerdtree#ui_glue#chRootCwd() {{{1
-" changes the current root to CWD
+" Change the NERDTree root to match the current working directory.
 function! nerdtree#ui_glue#chRootCwd()
-    try
-        let cwd = g:NERDTreePath.New(getcwd())
-    catch /^NERDTree.InvalidArgumentsError/
-        call nerdtree#echo("current directory does not exist.")
-        return
-    endtry
-    if cwd.str() == g:NERDTreeFileNode.GetRootForTab().path.str()
-       return
-    endif
-    call s:chRoot(g:NERDTreeDirNode.New(cwd, b:NERDTree))
+    NERDTreeCWD
 endfunction
 
 " FUNCTION: nnerdtree#ui_glue#clearBookmarks(bookmarks) {{{1
@@ -184,24 +173,28 @@ function! s:closeChildren(node)
 endfunction
 
 " FUNCTION: s:closeCurrentDir(node) {{{1
-" closes the parent dir of the current node
+" Close the parent directory of the current node.
 function! s:closeCurrentDir(node)
-    let parent = a:node.parent
-    while g:NERDTreeCascadeOpenSingleChildDir && !parent.isRoot()
-        let childNodes = parent.getVisibleChildren()
-        if len(childNodes) == 1 && childNodes[0].path.isDirectory
-            let parent = parent.parent
-        else
-            break
-        endif
-    endwhile
-    if parent ==# {} || parent.isRoot()
-        call nerdtree#echo("cannot close tree root")
-    else
-        call parent.close()
-        call b:NERDTree.render()
-        call parent.putCursorHere(0, 0)
+
+    if a:node.isRoot()
+        call nerdtree#echo('cannot close parent of tree root')
+        return
     endif
+
+    let l:parent = a:node.parent
+
+    while l:parent.isCascadable()
+        let l:parent = l:parent.parent
+    endwhile
+
+    if l:parent.isRoot()
+        call nerdtree#echo('cannot close tree root')
+        return
+    endif
+
+    call l:parent.close()
+    call b:NERDTree.render()
+    call l:parent.putCursorHere(0, 0)
 endfunction
 
 " FUNCTION: s:closeTreeWindow() {{{1
@@ -218,24 +211,30 @@ function! s:closeTreeWindow()
     endif
 endfunction
 
-" FUNCTION: s:deleteBookmark(bm) {{{1
-" if the cursor is on a bookmark, prompt to delete
-function! s:deleteBookmark(bm)
-    echo  "Are you sure you wish to delete the bookmark:\n\"" . a:bm.name . "\" (yN):"
+" FUNCTION: s:deleteBookmark(bookmark) {{{1
+" Prompt the user to confirm the deletion of the selected bookmark.
+function! s:deleteBookmark(bookmark)
+    let l:message = "Delete the bookmark \"" . a:bookmark.name
+                \ . "\" from the bookmark list?"
 
-    if  nr2char(getchar()) ==# 'y'
-        try
-            call a:bm.delete()
-            call b:NERDTree.root.refresh()
-            call b:NERDTree.render()
-            redraw
-        catch /^NERDTree/
-            call nerdtree#echoWarning("Could not remove bookmark")
-        endtry
-    else
-        call nerdtree#echo("delete aborted" )
+    let l:choices = "&Yes\n&No"
+
+    echo | redraw
+    let l:selection = confirm(l:message, l:choices, 1, 'Warning')
+
+    if l:selection != 1
+        call nerdtree#echo('bookmark not deleted')
+        return
     endif
 
+    try
+        call a:bookmark.delete()
+        silent call b:NERDTree.root.refresh()
+        call b:NERDTree.render()
+        echo | redraw
+    catch /^NERDTree/
+        call nerdtree#echoWarning('could not remove bookmark')
+    endtry
 endfunction
 
 " FUNCTION: s:displayHelp() {{{1
@@ -246,56 +245,50 @@ function! s:displayHelp()
     call b:NERDTree.ui.centerView()
 endfunction
 
-" FUNCTION: s:findAndRevealPath() {{{1
-function! s:findAndRevealPath()
+" FUNCTION: s:findAndRevealPath(pathStr) {{{1
+function! s:findAndRevealPath(pathStr)
+    let l:pathStr = !empty(a:pathStr) ? a:pathStr : expand('%:p')
+
+    if empty(l:pathStr)
+        call nerdtree#echoWarning('no file for the current buffer')
+        return
+    endif
+
     try
-        let p = g:NERDTreePath.New(expand("%:p"))
+        let l:pathObj = g:NERDTreePath.New(l:pathStr)
     catch /^NERDTree.InvalidArgumentsError/
-        call nerdtree#echo("no file for the current buffer")
+        call nerdtree#echoWarning('invalid path')
         return
     endtry
 
-    if p.isUnixHiddenPath()
-        let showhidden=g:NERDTreeShowHidden
-        let g:NERDTreeShowHidden = 1
-    endif
-
     if !g:NERDTree.ExistsForTab()
         try
-            let cwd = g:NERDTreePath.New(getcwd())
+            let l:cwd = g:NERDTreePath.New(getcwd())
         catch /^NERDTree.InvalidArgumentsError/
-            call nerdtree#echo("current directory does not exist.")
-            let cwd = p.getParent()
+            call nerdtree#echo('current directory does not exist.')
+            let l:cwd = l:pathObj.getParent()
         endtry
 
-        if p.isUnder(cwd)
-            call g:NERDTreeCreator.CreateTabTree(cwd.str())
+        if l:pathObj.isUnder(l:cwd)
+            call g:NERDTreeCreator.CreateTabTree(l:cwd.str())
         else
-            call g:NERDTreeCreator.CreateTabTree(p.getParent().str())
+            call g:NERDTreeCreator.CreateTabTree(l:pathObj.getParent().str())
         endif
     else
-        if !p.isUnder(g:NERDTreeFileNode.GetRootForTab().path)
-            if !g:NERDTree.IsOpen()
-                call g:NERDTreeCreator.ToggleTabTree('')
-            else
-                call g:NERDTree.CursorToTreeWin()
-            endif
-            call b:NERDTree.ui.setShowHidden(g:NERDTreeShowHidden)
-            call s:chRoot(g:NERDTreeDirNode.New(p.getParent(), b:NERDTree))
-        else
-            if !g:NERDTree.IsOpen()
-                call g:NERDTreeCreator.ToggleTabTree("")
-            endif
+        NERDTreeFocus
+
+        if !l:pathObj.isUnder(b:NERDTree.root.path)
+            call s:chRoot(g:NERDTreeDirNode.New(l:pathObj.getParent(), b:NERDTree))
         endif
     endif
-    call g:NERDTree.CursorToTreeWin()
-    let node = b:NERDTree.root.reveal(p)
-    call b:NERDTree.render()
-    call node.putCursorHere(1,0)
 
-    if p.isUnixHiddenFile()
-        let g:NERDTreeShowHidden = showhidden
+    if l:pathObj.isHiddenUnder(b:NERDTree.root.path)
+        call b:NERDTree.ui.setShowHidden(1)
     endif
+
+    let l:node = b:NERDTree.root.reveal(l:pathObj)
+    call b:NERDTree.render()
+    call l:node.putCursorHere(1, 0)
 endfunction
 
 "FUNCTION: s:handleLeftClick() {{{1
@@ -494,12 +487,14 @@ endfunction
 
 " FUNCTION: s:openInNewTab(target) {{{1
 function! s:openInNewTab(target)
-    call a:target.activate({'where': 't'})
+    let l:opener = g:NERDTreeOpener.New(a:target.path, {'where': 't'})
+    call l:opener.open(a:target)
 endfunction
 
 " FUNCTION: s:openInNewTabSilent(target) {{{1
 function! s:openInNewTabSilent(target)
-    call a:target.activate({'where': 't', 'stay': 1})
+    let l:opener = g:NERDTreeOpener.New(a:target.path, {'where': 't', 'stay': 1})
+    call l:opener.open(a:target)
 endfunction
 
 " FUNCTION: s:openNodeRecursively(node) {{{1
@@ -570,7 +565,7 @@ function! nerdtree#ui_glue#setupCommands()
     command! -n=0 -bar NERDTreeClose :call g:NERDTree.Close()
     command! -n=1 -complete=customlist,nerdtree#completeBookmarks -bar NERDTreeFromBookmark call g:NERDTreeCreator.CreateTabTree('<args>')
     command! -n=0 -bar NERDTreeMirror call g:NERDTreeCreator.CreateMirror()
-    command! -n=0 -bar NERDTreeFind call s:findAndRevealPath()
+    command! -n=? -complete=file -bar NERDTreeFind call s:findAndRevealPath('<args>')
     command! -n=0 -bar NERDTreeFocus call NERDTreeFocus()
     command! -n=0 -bar NERDTreeCWD call NERDTreeCWD()
 endfunction
@@ -615,40 +610,33 @@ function! s:toggleZoom()
     call b:NERDTree.ui.toggleZoom()
 endfunction
 
-"FUNCTION: nerdtree#ui_glue#upDir(keepState) {{{1
-"moves the tree up a level
+" FUNCTION: nerdtree#ui_glue#upDir(preserveState) {{{1
+" Move the NERDTree up one level.
 "
-"Args:
-"keepState: 1 if the current root should be left open when the tree is
-"re-rendered
-function! nerdtree#ui_glue#upDir(keepState)
-    let cwd = b:NERDTree.root.path.str({'format': 'UI'})
-    if cwd ==# "/" || cwd =~# '^[^/]..$'
-        call nerdtree#echo("already at top dir")
-    else
-        if !a:keepState
-            call b:NERDTree.root.close()
-        endif
+" Args:
+" preserveState: if 1, the current root is left open when the new tree is
+" rendered; if 0, the current root node is closed
+function! nerdtree#ui_glue#upDir(preserveState)
 
-        let oldRoot = b:NERDTree.root
+    try
+        call b:NERDTree.root.cacheParent()
+    catch /^NERDTree.CannotCacheParentError/
+        call nerdtree#echo('already at root directory')
+        return
+    endtry
 
-        if empty(b:NERDTree.root.parent)
-            let path = b:NERDTree.root.path.getParent()
-            let newRoot = g:NERDTreeDirNode.New(path, b:NERDTree)
-            call newRoot.open()
-            call newRoot.transplantChild(b:NERDTree.root)
-            let b:NERDTree.root = newRoot
-        else
-            let b:NERDTree.root = b:NERDTree.root.parent
-        endif
+    let l:oldRoot = b:NERDTree.root
+    let l:newRoot = b:NERDTree.root.parent
 
-        if g:NERDTreeChDirMode ==# 2
-            call b:NERDTree.root.path.changeToDir()
-        endif
+    call l:newRoot.open()
+    call l:newRoot.transplantChild(l:oldRoot)
 
-        call b:NERDTree.render()
-        call oldRoot.putCursorHere(0, 0)
+    if !a:preserveState
+        call l:oldRoot.close()
     endif
+
+    call b:NERDTree.changeRoot(l:newRoot)
+    call l:oldRoot.putCursorHere(0, 0)
 endfunction
 
 " FUNCTION: s:upDirCurrentRootOpen() {{{1

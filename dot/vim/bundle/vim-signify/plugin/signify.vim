@@ -66,6 +66,7 @@ augroup END
 command! -nargs=0 -bar       SignifyList            call sy#debug#list_active_buffers()
 command! -nargs=0 -bar       SignifyDebug           call sy#repo#debug_detection()
 command! -nargs=0 -bar -bang SignifyFold            call sy#fold#dispatch(<bang>1)
+command! -nargs=0 -bar       SignifyDiff            call sy#repo#diffmode()
 command! -nargs=0 -bar       SignifyRefresh         call sy#util#refresh_windows()
 command! -nargs=0 -bar       SignifyEnable          call sy#enable()
 command! -nargs=0 -bar       SignifyDisable         call sy#disable()
@@ -73,6 +74,8 @@ command! -nargs=0 -bar       SignifyToggle          call sy#toggle()
 command! -nargs=0 -bar       SignifyToggleHighlight call sy#highlight#line_toggle()
 
 " Init: mappings {{{1
+let s:cpoptions = &cpoptions
+set cpoptions+=B
 
 " hunk jumping
 nnoremap <silent> <expr> <plug>(signify-next-hunk) &diff
@@ -82,13 +85,17 @@ nnoremap <silent> <expr> <plug>(signify-prev-hunk) &diff
       \ ? '[c'
       \ : ":\<c-u>call sy#jump#prev_hunk(v:count1)\<cr>"
 
-if empty(maparg(']c', 'n'))
+if empty(maparg(']c', 'n')) && !hasmapto('<plug>(signify-next-hunk)', 'n')
   nmap ]c <plug>(signify-next-hunk)
-  nmap ]C 9999]c
+  if empty(maparg(']C', 'n')) && !hasmapto('9999]c', 'n')
+    nmap ]C 9999]c
+  endif
 endif
-if empty(maparg('[c', 'n'))
+if empty(maparg('[c', 'n')) && !hasmapto('<plug>(signify-prev-hunk)', 'n')
   nmap [c <plug>(signify-prev-hunk)
-  nmap [C 9999[c
+  if empty(maparg('[C', 'n')) && !hasmapto('9999[c', 'n')
+    nmap [C 9999[c
+  end
 endif
 
 " hunk text object
@@ -97,10 +104,13 @@ xnoremap <silent> <plug>(signify-motion-inner-visual)  :<c-u>call sy#util#hunk_t
 onoremap <silent> <plug>(signify-motion-outer-pending) :<c-u>call sy#util#hunk_text_object(1)<cr>
 xnoremap <silent> <plug>(signify-motion-outer-visual)  :<c-u>call sy#util#hunk_text_object(1)<cr>
 
+let &cpoptions = s:cpoptions
+unlet s:cpoptions
+
 " Function: save {{{1
 
 function! s:save()
-  if exists('b:sy') && b:sy.active && &modified
+  if exists('b:sy') && b:sy.active && &modified && &modifiable && ! &readonly
     write
   endif
 endfunction

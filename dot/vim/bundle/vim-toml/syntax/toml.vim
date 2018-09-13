@@ -26,6 +26,7 @@ syn region tomlString start=/'''/ end=/'''/
 hi def link tomlString String
 
 syn match tomlInteger /\<[+-]\=[0-9]\(_\=\d\)*\>/ display
+syn match tomlInteger /\<[+-]\=\(inf\|nan\)\>/ display
 hi def link tomlInteger Number
 
 syn match tomlFloat /\<[+-]\=[0-9]\(_\=\d\)*\.\d\+\>/ display
@@ -36,13 +37,24 @@ syn match tomlBoolean /\<\%(true\|false\)\>/ display
 hi def link tomlBoolean Boolean
 
 " https://tools.ietf.org/html/rfc3339
-syn match tomlDate /\d\{4\}-\d\{2\}-\d\{2\}T\d\{2\}:\d\{2\}:\d\{2\}\%(\.\d\+\)\?\%(Z\|[+-]\d\{2\}:\d\{2\}\)/ display
+syn match tomlDate /\d\{4\}-\d\{2\}-\d\{2\}/ display
+syn match tomlDate /\d\{2\}:\d\{2\}:\d\{2\}\%(\.\d\+\)\?/ display
+syn match tomlDate /\d\{4\}-\d\{2\}-\d\{2\}[T ]\d\{2\}:\d\{2\}:\d\{2\}\%(\.\d\+\)\?\%(Z\|[+-]\d\{2\}:\d\{2\}\)\?/ display
 hi def link tomlDate Constant
 
-syn match tomlTable /^\s*\[[^#\[\]]\+\]\s*\(#.*\)\?$/ contains=tomlComment
+syn match tomlKey /\v(^|[{,])\s*\zs[[:alnum:]_-]+\ze\s*\=/ display
+hi def link tomlKey Identifier
+
+syn region tomlKeyDq oneline start=/\v(^|[{,])\s*\zs"/ end=/"\ze\s*=/ contains=tomlEscape
+hi def link tomlKeyDq Identifier
+
+syn region tomlKeySq oneline start=/\v(^|[{,])\s*\zs'/ end=/'\ze\s*=/
+hi def link tomlKeySq Identifier
+
+syn region tomlTable oneline start=/^\s*\[[^\[]/ end=/\]/ contains=tomlKey,tomlKeyDq,tomlKeySq
 hi def link tomlTable Identifier
 
-syn match tomlTableArray /^\s*\[\[[^#\[\]]\+\]\]\s*\(#.*\)\?$/ contains=tomlComment
+syn region tomlTableArray oneline start=/^\s*\[\[/ end=/\]\]/ contains=tomlKey,tomlKeyDq,tomlKeySq
 hi def link tomlTableArray Identifier
 
 syn keyword tomlTodo TODO FIXME XXX BUG contained

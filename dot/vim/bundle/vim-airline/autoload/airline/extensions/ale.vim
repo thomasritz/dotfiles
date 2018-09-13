@@ -1,11 +1,35 @@
-" MIT License. Copyright (c) 2013-2017 Bjorn Neergaard, w0rp
+" MIT License. Copyright (c) 2013-2018 Bjorn Neergaard, w0rp et al.
 " vim: et ts=2 sts=2 sw=2
+
+scriptencoding utf-8
 
 let s:error_symbol = get(g:, 'airline#extensions#ale#error_symbol', 'E:')
 let s:warning_symbol = get(g:, 'airline#extensions#ale#warning_symbol', 'W:')
+let s:show_line_numbers = get(g:, 'airline#extensions#ale#show_line_numbers', 1)
 
 function! s:airline_ale_count(cnt, symbol)
   return a:cnt ? a:symbol. a:cnt : ''
+endfunction
+
+function! s:airline_ale_get_line_number(cnt, type) abort
+  if a:cnt == 0
+    return ''
+  endif
+
+  let buffer       = bufnr('')
+  let problem_type = (a:type ==# 'error') ? 'E' : 'W'
+  let problems     = copy(ale#engine#GetLoclist(buffer))
+
+  call filter(problems, 'v:val.bufnr is buffer && v:val.type is# problem_type')
+
+  if empty(problems)
+    return ''
+  endif
+
+  let open_lnum_symbol  = get(g:, 'airline#extensions#ale#open_lnum_symbol', '(L')
+  let close_lnum_symbol = get(g:, 'airline#extensions#ale#close_lnum_symbol', ')')
+
+  return open_lnum_symbol . problems[0].lnum . close_lnum_symbol
 endfunction
 
 function! airline#extensions#ale#get(type)
@@ -29,7 +53,11 @@ function! airline#extensions#ale#get(type)
     let num = is_err ? counts[0] : counts[1]
   endif
 
-  return s:airline_ale_count(num, symbol)
+  if s:show_line_numbers == 1
+    return s:airline_ale_count(num, symbol) . <sid>airline_ale_get_line_number(num, a:type)
+  else
+    return s:airline_ale_count(num, symbol)
+  endif
 endfunction
 
 function! airline#extensions#ale#get_warning()

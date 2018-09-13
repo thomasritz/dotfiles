@@ -129,6 +129,7 @@ Most important options:~
 Other options:~
 
     |g:signify_vcs_cmds|
+    |g:signify_vcs_cmds_diffmode|
     |g:signify_disable_by_default|
     |g:signify_skip_filetype|
     |g:signify_skip_filename|
@@ -242,6 +243,10 @@ escape spaces by quoting, e.g.:
       \ 'git': '"C:\Program Files (x86)\Git\bin\git.exe" diff --no-color --no-ext-diff -U0 -- %f'
       \ }
 <
+NOTE: Always test these commands on the shell first and make sure that no
+colors are emitted. Our parser expects lines in the diff output to start with
+"@@", but with colors the line starts with escape sequences instead.
+
 Default:
 >
     let g:signify_vcs_cmds = {
@@ -254,10 +259,25 @@ Default:
       \ 'cvs':      'cvs diff -U0 -- %f',
       \ 'rcs':      'rcsdiff -U0 %f 2>%n',
       \ 'accurev':  'accurev diff %f -- -U0',
-      \ 'perforce': 'p4 info '. sy#util#shell_redirect('%n') .' && env P4DIFF=%d p4 diff -dU0 %f'
+      \ 'perforce': 'p4 info '. sy#util#shell_redirect('%n') . (has('win32') ? '' : ' env P4DIFF= P4COLORS=') .' p4 diff -du0 %f',
       \ 'tfs':      'tf diff -version:W -noprompt %f',
       \ }
 <
+------------------------------------------------------------------------------
+                                                   *g:signify_vcs_cmds_diffmode*  >
+    let g:signify_vcs_cmds_diffmode = {
+      \ 'git':      'git show HEAD:./%f',
+      \ 'hg':       'hg cat %f',
+      \ 'svn':      'svn cat %f',
+      \ 'bzr':      'bzr cat %f',
+      \ 'darcs':    'darcs show contents -- %f',
+      \ 'cvs':      'cvs up -p -- %f 2>%n',
+      \ 'perforce': 'p4 print %f',
+      \ }
+<
+The command to use for |:SignifyDiff|. This option takes the same format as
+|g:signify_vcs_cmds|.
+
 ------------------------------------------------------------------------------
                                                   *g:signify_disable_by_default*  >
     let g:signify_disable_by_default = 0
@@ -427,6 +447,15 @@ Refresh signs in all windows.
 NOTE: Nothing will happen, if :SignifyRefresh is used from the |cmdline-window|.
 
 ------------------------------------------------------------------------------
+                                                          *signify-:SignifyDiff*  >
+    :SignifyDiff
+<
+Open a new tab with two windows using |diff-mode| to show the differences
+between the current file and its version that was last checked in.
+
+Also see |g:signify_vcs_cmds_diffmode|.
+
+------------------------------------------------------------------------------
                                                           *signify-:SignifyFold*  >
     :SignifyFold[!]
 <
@@ -487,7 +516,13 @@ Hunk jumping:~
     ]C   Jump to last hunk.
     [C   Jump to first hunk.
 
-If you don't like these mappings, you can map them yourself:
+These keys only get mapped by default when:
+
+  - The keys are not mapped already (by you or another plugin).
+  - There are no other keys that are mapped to do the same (to avoid duplicate
+    mappings).
+
+Mapping other keys:
 >
     nmap <leader>gj <plug>(signify-next-hunk)
     nmap <leader>gk <plug>(signify-prev-hunk)

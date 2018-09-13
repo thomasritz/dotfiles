@@ -36,8 +36,8 @@ function! go#tool#Files(...) abort
     endif
   endfor
 
-  let out = go#tool#ExecuteInDir('go list -f ' . shellescape(combined))
-  return split(out, '\n')
+  let [l:out, l:err] = go#tool#ExecuteInDir(['go', 'list', '-tags', go#config#BuildTags(), '-f', l:combined])
+  return split(l:out, '\n')
 endfunction
 
 function! go#tool#Deps() abort
@@ -46,9 +46,8 @@ function! go#tool#Deps() abort
   else
     let format = "{{range $f := .Deps}}{{$f}}\n{{end}}"
   endif
-  let command = 'go list -f '.shellescape(format)
-  let out = go#tool#ExecuteInDir(command)
-  return split(out, '\n')
+  let [l:out, l:err] = go#tool#ExecuteInDir(['go', 'list', '-tags', go#config#BuildTags(), '-f', l:format])
+  return split(l:out, '\n')
 endfunction
 
 function! go#tool#Imports() abort
@@ -58,37 +57,39 @@ function! go#tool#Imports() abort
   else
     let format = "{{range $f := .Imports}}{{$f}}{{printf \"\\n\"}}{{end}}"
   endif
-  let command = 'go list -f '.shellescape(format)
-  let out = go#tool#ExecuteInDir(command)
-  if go#util#ShellError() != 0
+  let [l:out, l:err] = go#tool#ExecuteInDir(['go', 'list', '-tags', go#config#BuildTags(), '-f', l:format])
+  if l:err != 0
     echo out
     return imports
   endif
 
   for package_path in split(out, '\n')
-    let cmd = "go list -f '{{.Name}}' " . shellescape(package_path)
-    let package_name = substitute(go#tool#ExecuteInDir(cmd), '\n$', '', '')
+    let [l:out, l:err] = go#tool#ExecuteInDir(['go', 'list', '-tags', go#config#BuildTags(), '-f', '{{.Name}}', l:package_path])
+    if l:err != 0
+      echo out
+      return imports
+    endif
+    let package_name = substitute(l:out, '\n$', '', '')
     let imports[package_name] = package_path
   endfor
 
   return imports
 endfunction
 
-function! go#tool#Info(auto) abort
-  let l:mode = get(g:, 'go_info_mode', 'gocode')
+function! go#tool#Info(showstatus) abort
+  let l:mode = go#config#InfoMode()
   if l:mode == 'gocode'
-    call go#complete#Info(a:auto)
+    call go#complete#Info(a:showstatus)
   elseif l:mode == 'guru'
-    call go#guru#DescribeInfo()
+    call go#guru#DescribeInfo(a:showstatus)
   else
     call go#util#EchoError('go_info_mode value: '. l:mode .' is not valid. Valid values are: [gocode, guru]')
   endif
 endfunction
 
 function! go#tool#PackageName() abort
-  let command = "go list -f \"{{.Name}}\""
-  let out = go#tool#ExecuteInDir(command)
-  if go#util#ShellError() != 0
+  let [l:out, l:err] = go#tool#ExecuteInDir(['go', 'list', '-tags', go#config#BuildTags(), '-f', '{{.Name}}'])
+  if l:err != 0
       return -1
   endif
 
@@ -117,7 +118,7 @@ function! go#tool#ParseErrors(lines) abort
       " Preserve indented lines.
       " This comes up especially with multi-line test output.
       if match(line, '^\s') >= 0
-        call add(errors, {"text": line})
+        call add(errors, {"text": substitute(line, '\r$', '', '')})
       endif
     endif
   endfor
@@ -162,62 +163,35 @@ function! go#tool#FilterValids(items) abort
 endfunction
 
 function! go#tool#ExecuteInDir(cmd) abort
-  let old_gopath = $GOPATH
-  let old_goroot = $GOROOT
-  let $GOPATH = go#path#Detect()
-  let $GOROOT = go#util#env("goroot")
+  if !isdirectory(expand("%:p:h"))
+    return ['', 1]
+  endif
 
   let cd = exists('*haslocaldir') && haslocaldir() ? 'lcd ' : 'cd '
   let dir = getcwd()
   try
     execute cd . fnameescape(expand("%:p:h"))
-    let out = go#util#System(a:cmd)
+    let [l:out, l:err] = go#util#Exec(a:cmd)
   finally
-    execute cd . fnameescape(dir)
+    execute cd . fnameescape(l:dir)
   endtry
-
-  let $GOROOT = old_goroot
-  let $GOPATH = old_gopath
-  return out
+  return [l:out, l:err]
 endfunction
 
 " Exists checks whether the given importpath exists or not. It returns 0 if
 " the importpath exists under GOPATH.
 function! go#tool#Exists(importpath) abort
-    let command = "go list ". a:importpath
-    let out = go#tool#ExecuteInDir(command)
-
-    if go#util#ShellError() != 0
+    let [l:out, l:err] = go#tool#ExecuteInDir(['go', 'list', a:importpath])
+    if l:err != 0
         return -1
     endif
 
     return 0
 endfunction
 
-
-" following two functions are from: https://github.com/mattn/gist-vim
-" thanks  @mattn
-function! s:get_browser_command() abort
-    let go_play_browser_command = get(g:, 'go_play_browser_command', '')
-    if go_play_browser_command == ''
-        if go#util#IsWin()
-            let go_play_browser_command = '!start rundll32 url.dll,FileProtocolHandler %URL%'
-        elseif has('mac') || has('macunix') || has('gui_macvim') || go#util#System('uname') =~? '^darwin'
-            let go_play_browser_command = 'open %URL%'
-        elseif executable('xdg-open')
-            let go_play_browser_command = 'xdg-open %URL%'
-        elseif executable('firefox')
-            let go_play_browser_command = 'firefox %URL% &'
-        else
-            let go_play_browser_command = ''
-        endif
-    endif
-    return go_play_browser_command
-endfunction
-
 function! go#tool#OpenBrowser(url) abort
-    let cmd = s:get_browser_command()
-    if len(cmd) == 0
+    let l:cmd = go#config#PlayBrowserCommand()
+    if len(l:cmd) == 0
         redraw
         echohl WarningMsg
         echo "It seems that you don't have general web browser. Open URL below."
@@ -225,15 +199,17 @@ function! go#tool#OpenBrowser(url) abort
         echo a:url
         return
     endif
-    if cmd =~ '^!'
-        let cmd = substitute(cmd, '%URL%', '\=escape(shellescape(a:url),"#")', 'g')
-        silent! exec cmd
+
+    " if setting starts with a !.
+    if l:cmd =~ '^!'
+        let l:cmd = substitute(l:cmd, '%URL%', '\=escape(shellescape(a:url), "#")', 'g')
+        silent! exec l:cmd
     elseif cmd =~ '^:[A-Z]'
-        let cmd = substitute(cmd, '%URL%', '\=escape(a:url,"#")', 'g')
-        exec cmd
+        let l:cmd = substitute(l:cmd, '%URL%', '\=escape(a:url,"#")', 'g')
+        exec l:cmd
     else
-        let cmd = substitute(cmd, '%URL%', '\=shellescape(a:url)', 'g')
-        call go#util#System(cmd)
+        let l:cmd = substitute(l:cmd, '%URL%', '\=shellescape(a:url)', 'g')
+        call go#util#System(l:cmd)
     endif
 endfunction
 

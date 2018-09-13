@@ -29,6 +29,11 @@ if has("gui_mac") || has("gui_macvim") || has("mac")
     call NERDTreeAddMenuItem({'text': '(q)uicklook the current node', 'shortcut': 'q', 'callback': 'NERDTreeQuickLook'})
 endif
 
+if executable("xdg-open")
+    call NERDTreeAddMenuItem({'text': '(r)eveal the current node in file manager', 'shortcut': 'r', 'callback': 'NERDTreeRevealFileLinux'})
+    call NERDTreeAddMenuItem({'text': '(o)pen the current node with system editor', 'shortcut': 'o', 'callback': 'NERDTreeExecuteFileLinux'})
+endif
+
 if g:NERDTreePath.CopyingSupported()
     call NERDTreeAddMenuItem({'text': '(c)opy the current node', 'shortcut': 'c', 'callback': 'NERDTreeCopyNode'})
 endif
@@ -55,7 +60,22 @@ function! s:promptToDelBuffer(bufnum, msg)
         " Is not it better to close single tabs with this file only ?
         let s:originalTabNumber = tabpagenr()
         let s:originalWindowNumber = winnr()
-        exec "tabdo windo if winbufnr(0) == " . a:bufnum . " | exec ':enew! ' | endif"
+        " Go to the next buffer in buffer list if at least one extra buffer is listed
+        " Otherwise open a new empty buffer
+        if v:version >= 800
+            let l:listedBufferCount = len(getbufinfo({'buflisted':1}))
+        elseif v:version >= 702
+            let l:listedBufferCount = len(filter(range(1, bufnr('$')), 'buflisted(v:val)'))
+        else
+            " Ignore buffer count in this case to make sure we keep the old
+            " behavior
+            let l:listedBufferCount = 0
+        endif
+        if l:listedBufferCount > 1
+            exec "tabdo windo if winbufnr(0) == " . a:bufnum . " | exec ':bnext! ' | endif"
+        else
+            exec "tabdo windo if winbufnr(0) == " . a:bufnum . " | exec ':enew! ' | endif"
+        endif
         exec "tabnext " . s:originalTabNumber
         exec s:originalWindowNumber . "wincmd w"
         " 3. We don't need a previous buffer anymore
@@ -138,12 +158,13 @@ function! NERDTreeMoveNode()
         let bufnum = bufnr("^".curNode.path.str()."$")
 
         call curNode.rename(newNodePath)
+        call b:NERDTree.root.refresh()
         call NERDTreeRender()
 
         "if the node is open in a buffer, ask the user if they want to
         "close that buffer
         if bufnum != -1
-            let prompt = "\nNode renamed.\n\nThe old file is open in buffer ". bufnum . (bufwinnr(bufnum) ==# -1 ? " (hidden)" : "") .". Replace this buffer with a new file? (yN)"
+            let prompt = "\nNode renamed.\n\nThe old file is open in buffer ". bufnum . (bufwinnr(bufnum) ==# -1 ? " (hidden)" : "") .". Replace this buffer with the new file? (yN)"
             call s:promptToRenameBuffer(bufnum,  prompt, newNodePath)
         endif
 
@@ -160,7 +181,8 @@ function! NERDTreeDeleteNode()
     let currentNode = g:NERDTreeFileNode.GetSelected()
     let confirmed = 0
 
-    if currentNode.path.isDirectory && currentNode.getChildCount() > 0
+    if currentNode.path.isDirectory && ((currentNode.isOpen && currentNode.getChildCount() > 0) ||
+                                      \ (len(currentNode._glob('*', 1)) > 0))
         let choice =input("Delete the current node\n" .
                          \ "==========================================================\n" .
                          \ "STOP! Directory is not empty! To delete, type 'yes'\n" .
@@ -202,11 +224,22 @@ endfunction
 " FUNCTION: NERDTreeListNode() {{{1
 function! NERDTreeListNode()
     let treenode = g:NERDTreeFileNode.GetSelected()
-    if treenode != {}
-        let metadata = split(system('ls -ld ' . shellescape(treenode.path.str())), '\n')
+    if !empty(treenode)
+        let s:uname = system("uname")
+        let stat_cmd = 'stat -c "%s" ' 
+        
+        if s:uname =~? "Darwin"                
+            let stat_cmd = 'stat -f "%z" '
+        endif
+
+        let cmd = 'size=$(' . stat_cmd . shellescape(treenode.path.str()) . ') && ' .
+        \         'size_with_commas=$(echo $size | sed -e :a -e "s/\(.*[0-9]\)\([0-9]\{3\}\)/\1,\2/;ta") && ' .
+        \         'ls -ld ' . shellescape(treenode.path.str()) . ' | sed -e "s/ $size / $size_with_commas /"'
+
+        let metadata = split(system(cmd),'\n')
         call nerdtree#echo(metadata[0])
     else
-        call nerdtree#echo("No information avaialable")
+        call nerdtree#echo("No information available")
     endif
 endfunction
 
@@ -310,4 +343,23 @@ function! NERDTreeExecuteFile()
         call system("open '" . treenode.path.str() . "'")
     endif
 endfunction
+
+" FUNCTION: NERDTreeRevealFileLinux() {{{1
+function! NERDTreeRevealFileLinux()
+    let treenode = g:NERDTreeFileNode.GetSelected()
+    let parentnode = treenode.parent
+    if parentnode != {}
+        call system("xdg-open '" . parentnode.path.str() . "' &")
+    endif
+endfunction
+
+" FUNCTION: NERDTreeExecuteFileLinux() {{{1
+function! NERDTreeExecuteFileLinux()
+    let treenode = g:NERDTreeFileNode.GetSelected()
+    if treenode != {}
+        call system("xdg-open '" . treenode.path.str() . "' &")
+    endif
+endfunction
+
 " vim: set sw=4 sts=4 et fdm=marker:
+

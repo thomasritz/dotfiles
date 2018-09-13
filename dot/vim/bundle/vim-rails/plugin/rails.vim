@@ -26,7 +26,18 @@ function! RailsDetect(...) abort
     return 1
   endif
   let fn = fnamemodify(a:0 ? a:1 : expand('%'), ':p')
-  if fn =~# ':[\/]\{2\}'
+  let ns = matchstr(fn, '^\a\a\+\ze:')
+  if len(ns) && exists('*' . ns . '#filereadable') && exists('*' . ns . '#isdirectory') && !get(g:, 'projectionist_ignore_' . ns)
+    let fn = substitute(fn, '[^:\/#]*$', '', '')
+    while fn =~# '^\a\a\+:.'
+      if {ns}#filereadable(fn . 'config/environment.rb') && {ns}#isdirectory(fn . 'app')
+        let b:rails_root = substitute(fn, '[:\/#]$', '', '')
+        return 1
+      endif
+      let fn = substitute(fn, '[^:\/#]*[:\/#][^:\/#]*$', '', '')
+    endwhile
+    return 0
+  elseif len(ns) || fn =~# ':[\/]\{2\}'
     return 0
   endif
   if !isdirectory(fn)
@@ -39,7 +50,7 @@ function! RailsDetect(...) abort
   endif
 endfunction
 
-function! s:log_detect() abort
+function! s:LogDetect() abort
   let path = matchstr(get(w:, 'quickfix_title'), '\<cgetfile \zs.*\ze[\\/]log[\\/].*.log$')
   if !empty(path) && filereadable(path . '/config/environment.rb') && isdirectory(path . '/app')
     let b:rails_root = path
@@ -70,8 +81,6 @@ endfunction
 
 augroup railsPluginDetect
   autocmd!
-  autocmd BufEnter * if exists("b:rails_root")|call s:doau_user('BufEnterRails')|endif
-  autocmd BufLeave * if exists("b:rails_root")|call s:doau_user('BufLeaveRails')|endif
 
   autocmd BufNewFile,BufReadPost *
         \ if RailsDetect(expand("<afile>:p")) && empty(&filetype) |
@@ -88,7 +97,7 @@ augroup railsPluginDetect
         \ endif
   autocmd FileType * if RailsDetect() | call rails#buffer_setup() | endif
 
-  autocmd BufNewFile,BufReadPost *.yml,*.yml.example
+  autocmd BufNewFile,BufReadPost *.yml,*.yml.example,*.yml.sample
         \ if &filetype !=# 'eruby.yaml' && RailsDetect() |
         \   set filetype=eruby.yaml |
         \ endif
@@ -96,20 +105,27 @@ augroup railsPluginDetect
         \ if &filetype !=# 'ruby' | set filetype=ruby | endif
   autocmd BufReadPost *.log if RailsDetect() | set filetype=railslog | endif
 
-  autocmd FileType qf call s:log_detect()
-  autocmd FileType railslog call rails#log_setup()
-  autocmd Syntax railslog call rails#log_syntax()
-  autocmd Syntax ruby,eruby,haml,javascript,coffee,css,sass,scss
-        \ if RailsDetect() | call rails#buffer_syntax() | endif
+  autocmd FileType qf call s:LogDetect()
 
   autocmd User ProjectionistDetect
         \ if RailsDetect(get(g:, 'projectionist_file', '')) |
         \   call projectionist#append(b:rails_root,
-        \     {'*': {"start": rails#app().static_rails_command('server')}}) |
+        \     {'*': {"console": rails#app().static_rails_command('console')}}) |
         \ endif
 augroup END
 
 command! -bang -bar -nargs=* -count -complete=customlist,rails#complete_rails Rails execute rails#command(<bang>0, '<mods>', !<count> && <line1> ? -1 : <count>, <q-args>)
+
+" }}}1
+" dadbod.vim support {{{1
+
+call extend(g:, {'db_adapters': {}}, 'keep')
+call extend(g:db_adapters, {
+      \ 'oracle-enhanced': 'oracle',
+      \ 'mysql2': 'mysql',
+      \ 'sqlite3': 'sqlite'}, 'keep')
+
+let g:db_adapter_rails = 'rails#db_'
 
 " }}}1
 " abolish.vim support {{{1

@@ -31,7 +31,7 @@ nnoremap <silent> <Plug>(go-coverage-browser) :<C-u>call go#coverage#Browser(!g:
 
 nnoremap <silent> <Plug>(go-files) :<C-u>call go#tool#Files()<CR>
 nnoremap <silent> <Plug>(go-deps) :<C-u>call go#tool#Deps()<CR>
-nnoremap <silent> <Plug>(go-info) :<C-u>call go#tool#Info(0)<CR>
+nnoremap <silent> <Plug>(go-info) :<C-u>call go#tool#Info(1)<CR>
 nnoremap <silent> <Plug>(go-import) :<C-u>call go#import#SwitchImport(1, '', expand('<cword>'), '')<CR>
 nnoremap <silent> <Plug>(go-imports) :<C-u>call go#fmt#Format(1)<CR>
 
@@ -43,7 +43,8 @@ nnoremap <silent> <Plug>(go-callstack) :<C-u>call go#guru#Callstack(-1)<CR>
 xnoremap <silent> <Plug>(go-freevars) :<C-u>call go#guru#Freevars(0)<CR>
 nnoremap <silent> <Plug>(go-channelpeers) :<C-u>call go#guru#ChannelPeers(-1)<CR>
 nnoremap <silent> <Plug>(go-referrers) :<C-u>call go#guru#Referrers(-1)<CR>
-nnoremap <silent> <Plug>(go-sameids) :<C-u>call go#guru#SameIds()<CR>
+nnoremap <silent> <Plug>(go-sameids) :<C-u>call go#guru#SameIds(1)<CR>
+nnoremap <silent> <Plug>(go-pointsto) :<C-u>call go#guru#PointsTo(-1)<CR>
 nnoremap <silent> <Plug>(go-whicherrs) :<C-u>call go#guru#Whicherrs(-1)<CR>
 nnoremap <silent> <Plug>(go-sameids-toggle) :<C-u>call go#guru#ToggleSameIds()<CR>
 
@@ -71,5 +72,7 @@ nnoremap <silent> <Plug>(go-vet) :<C-u>call go#lint#Vet(!g:go_jump_to_error)<CR>
 nnoremap <silent> <Plug>(go-alternate-edit) :<C-u>call go#alternate#Switch(0, "edit")<CR>
 nnoremap <silent> <Plug>(go-alternate-vertical) :<C-u>call go#alternate#Switch(0, "vsplit")<CR>
 nnoremap <silent> <Plug>(go-alternate-split) :<C-u>call go#alternate#Switch(0, "split")<CR>
+
+nnoremap <silent> <Plug>(go-iferr) :<C-u>call go#iferr#Generate()<CR>
 
 " vim: sw=2 ts=2 et

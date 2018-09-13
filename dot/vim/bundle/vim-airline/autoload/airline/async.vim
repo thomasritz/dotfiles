@@ -1,5 +1,7 @@
-" MIT License. Copyright (c) 2013-2017 C.Brabandt
+" MIT License. Copyright (c) 2013-2018 C.Brabandt et al.
 " vim: et ts=2 sts=2 sw=2
+
+scriptencoding utf-8
 
 let s:untracked_jobs = {}
 let s:mq_jobs        = {}
@@ -14,11 +16,13 @@ function! s:untracked_output(dict, buf)
   endif
 endfunction
 
-function! s:mq_output(buf, file)
+" also called from branch extension (for non-async vims)
+function! airline#async#mq_output(buf, file)
   let buf=a:buf
   if !empty(a:buf)
-    if a:buf is# 'no patches applied' ||
-      \ a:buf =~# "unknown command 'qtop'"
+    if a:buf =~# 'no patches applied' ||
+      \ a:buf =~# "unknown command 'qtop'" ||
+      \ a:buf =~# "abort"
       let buf = ''
     elseif exists("b:mq") && b:mq isnot# buf
       " make sure, statusline is updated
@@ -51,13 +55,15 @@ endfunction
 
 if v:version >= 800 && has("job")
   " Vim 8.0 with Job feature
+  " TODO: Check if we need the cwd option for the job_start() functions
+  "       (only works starting with Vim 8.0.0902)
 
   function! s:on_stdout(channel, msg) dict abort
     let self.buf .= a:msg
   endfunction
 
   function! s:on_exit_mq(channel) dict abort
-    call s:mq_output(self.buf, self.file)
+    call airline#async#mq_output(self.buf, self.file)
   endfunction
 
   function! s:on_exit_untracked(channel) dict abort
@@ -117,7 +123,7 @@ if v:version >= 800 && has("job")
     let s:po_jobs[a:file] = id
   endfunction
 
-  function airline#async#vim_vcs_untracked(config, file)
+  function! airline#async#vim_vcs_untracked(config, file)
     if g:airline#init#is_windows && &shell =~ 'cmd'
       let cmd = a:config['cmd'] . shellescape(a:file)
     else
@@ -159,7 +165,7 @@ elseif has("nvim")
 
   function! s:nvim_mq_job_handler(job_id, data, event) dict
     if a:event == 'exit'
-      call s:mq_output(self.buf, self.file)
+      call airline#async#mq_output(self.buf, self.file)
     endif
   endfunction
 
@@ -236,7 +242,12 @@ function! airline#async#nvim_vcs_untracked(cfg, file, vcs)
       " still running
       return
     endif
+    try
     let id = jobstart(cmd, config)
+    catch
+      " catch-all, jobstart() failed, fall back to system()
+      let id=-1
+    endtry
     let s:untracked_jobs[a:file] = id
   endif
   " vim without job feature or nvim jobstart failed
