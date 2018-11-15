@@ -36,17 +36,22 @@ function! airline#init#bootstrap()
   call s:check_defined('g:airline_mode_map', {})
   call extend(g:airline_mode_map, {
         \ '__' : '------',
-        \ 'n'  : 'NORMAL',
-        \ 'i'  : 'INSERT',
-        \ 'R'  : 'REPLACE',
-        \ 'v'  : 'VISUAL',
-        \ 'V'  : 'V-LINE',
         \ 'c'  : 'COMMAND',
-        \ '' : 'V-BLOCK',
+        \ 'i'  : 'INSERT',
+        \ 'ic' : 'INSERT COMPL',
+        \ 'ix' : 'INSERT COMPL',
+        \ 'n'  : 'NORMAL',
+        \ 'ni' : '(INSERT)',
+        \ 'no' : 'OP PENDING',
+        \ 'R'  : 'REPLACE',
+        \ 'Rv' : 'V REPLACE',
         \ 's'  : 'SELECT',
         \ 'S'  : 'S-LINE',
         \ '' : 'S-BLOCK',
         \ 't'  : 'TERMINAL',
+        \ 'v'  : 'VISUAL',
+        \ 'V'  : 'V-LINE',
+        \ '' : 'V-BLOCK',
         \ }, 'keep')
 
   call s:check_defined('g:airline_theme_map', {})

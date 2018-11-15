@@ -1,5 +1,20 @@
 function! s:gocodeCommand(cmd, args) abort
-  let bin_path = go#path#CheckBinPath("gocode")
+  let l:gocode_bin = "gocode"
+  let l:gomod = go#util#gomod()
+  if filereadable(l:gomod)
+    " Save the file when in module mode so that go list can read the
+    " imports. If the user doesn't have autowrite or autorwriteall enabled,
+    " they'll need to write the file manually to get reliable results.
+    " See https://github.com/fatih/vim-go/pull/1988#issuecomment-428576989.
+    "
+    " TODO(bc): don't save the file when in module mode once
+    " golang.org/x/tools/go/packages has support for an overlay and it's used
+    " by gocode.
+    call go#cmd#autowrite()
+    let l:gocode_bin = "gocode-gomod"
+  endif
+
+  let bin_path = go#path#CheckBinPath(l:gocode_bin)
   if empty(bin_path)
     return []
   endif
@@ -16,6 +31,12 @@ function! s:gocodeCommand(cmd, args) abort
 
   if go#config#GocodeProposeSource()
     let cmd = extend(cmd, ['-source'])
+  else
+    let cmd = extend(cmd, ['-fallback-to-source'])
+  endif
+
+  if go#config#GocodeUnimportedPackages()
+    let cmd = extend(cmd, ['-unimported-packages'])
   endif
 
   let cmd = extend(cmd, [a:cmd])
@@ -67,7 +88,7 @@ function! go#complete#GetInfo() abort
 endfunction
 
 function! go#complete#Info(showstatus) abort
-  if go#util#has_job(1) || has('nvim')
+  if go#util#has_job(1)
     return s:async_info(1, a:showstatus)
   else
     return s:sync_info(1)
@@ -85,7 +106,7 @@ function! s:async_info(echo, showstatus)
     if &encoding != 'utf-8'
       let i = 0
       while i < len(a:messages)
-        let a:messages[i] = iconv(a:messages[i], 'utf-i', &encoding)
+        let a:messages[i] = iconv(a:messages[i], 'utf-8', &encoding)
         let i += 1
       endwhile
     endif

@@ -376,7 +376,7 @@ function! fugitive#repo(...) abort
     endif
     return extend(repo, s:repo_prototype, 'keep')
   endif
-  call s:throw('not a git repository: '.expand('%:p'))
+  call s:throw('not a Git repository: ' . string(dir))
 endfunction
 
 function! s:repo_dir(...) dict abort
@@ -400,19 +400,19 @@ function! s:repo_bare() dict abort
   endif
 endfunction
 
-function! s:repo_route(object) dict abort
-  return fugitive#Route(a:object, self.git_dir)
+function! s:repo_find(object) dict abort
+  return fugitive#Find(a:object, self.git_dir)
 endfunction
 
 function! s:repo_translate(rev) dict abort
-  return s:Slash(fugitive#Route(substitute(a:rev, '^/', ':(top)', ''), self.git_dir))
+  return s:Slash(fugitive#Find(substitute(a:rev, '^/', ':(top)', ''), self.git_dir))
 endfunction
 
 function! s:repo_head(...) dict abort
   return fugitive#Head(a:0 ? a:1 : 0, self.git_dir)
 endfunction
 
-call s:add_methods('repo',['dir','tree','bare','route','translate','head'])
+call s:add_methods('repo',['dir','tree','bare','find','translate','head'])
 
 function! s:repo_prepare(...) dict abort
   return call('fugitive#Prepare', [self.git_dir] + a:000)
@@ -485,8 +485,24 @@ function! s:Owner(path, ...) abort
     return ''
   endif
   let [pdir, commit, file] = s:DirCommitFile(a:path)
-  if s:cpath(dir, pdir) && commit =~# '^\x\{40\}$'
-    return commit
+  if s:cpath(dir, pdir)
+    if commit =~# '^\x\{40\}$'
+      return commit
+    elseif commit ==# '2'
+      return 'HEAD^{}'
+    endif
+    if filereadable(dir . '/MERGE_HEAD')
+      let merge_head = 'MERGE_HEAD'
+    elseif filereadable(dir . '/REBASE_HEAD')
+      let merge_head = 'REBASE_HEAD'
+    else
+      return ''
+    endif
+    if commit ==# '3'
+      return merge_head . '^{}'
+    elseif commit ==# '1'
+      return s:TreeChomp('merge-base', 'HEAD', merge_head, '--')
+    endif
   endif
   let path = fnamemodify(a:path, ':p')
   if s:cpath(dir . '/', path[0 : len(dir)]) && a:path =~# 'HEAD$'
@@ -565,7 +581,7 @@ function! s:Relative(...) abort
   return fugitive#Path(@%, a:0 ? a:1 : ':(top)')
 endfunction
 
-function! fugitive#Route(object, ...) abort
+function! fugitive#Find(object, ...) abort
   if type(a:object) == type(0)
     let name = bufname(a:object)
     return s:PlatformSlash(name =~# '^$\|^/\|^\a\+:' ? name : getcwd() . '/' . name)
@@ -622,7 +638,7 @@ function! fugitive#Route(object, ...) abort
     else
       let altdir = FugitiveExtractGitDir(f)
       if len(altdir) && !s:cpath(dir, altdir)
-        return fugitive#Route(a:object, altdir)
+        return fugitive#Find(a:object, altdir)
       endif
     endif
   elseif rev =~# '^:[0-3]:'
@@ -654,7 +670,7 @@ function! fugitive#Route(object, ...) abort
         else
           let altdir = FugitiveExtractGitDir(file)
           if len(altdir) && !s:cpath(dir, altdir)
-            return fugitive#Route(a:object, altdir)
+            return fugitive#Find(a:object, altdir)
           endif
           return file
         endif
@@ -682,7 +698,7 @@ function! s:Generate(rev, ...) abort
   elseif a:rev =~# '^/' && len(tree) && getftime(tree . a:rev) >= 0 && getftime(a:rev) < 0
     let object = ':(top)' . a:rev[1:-1]
   endif
-  return fugitive#Route(object, dir)
+  return fugitive#Find(object, dir)
 endfunction
 
 function! s:DotRelative(path) abort
@@ -1082,7 +1098,7 @@ function! fugitive#buffer(...) abort
   if buffer.getvar('git_dir') !=# ''
     return buffer
   endif
-  call s:throw('not a git repository: '.bufname(buffer['#']))
+  call s:throw('not a Fugitive buffer: ' . string(bufname(buffer['#'])))
 endfunction
 
 function! s:buffer_getvar(var) dict abort
@@ -1440,13 +1456,14 @@ function! fugitive#BufReadCmd(...) abort
         let b:fugitive_type = 'tree'
       endif
       if v:shell_error
+        let error = b:fugitive_type
         unlet b:fugitive_type
         if rev =~# '^:\d:'
           let &readonly = !filewritable(dir . '/index')
           return 'silent doautocmd BufNewFile '.s:fnameescape(amatch)
         else
           setlocal readonly nomodifiable
-          return ''
+          return 'echo ' . string(error)
         endif
       elseif b:fugitive_type !~# '^\%(tag\|commit\|tree\|blob\)$'
         return "echoerr ".string("fugitive: unrecognized git type '".b:fugitive_type."'")
@@ -1493,13 +1510,13 @@ function! fugitive#BufReadCmd(...) abort
           if getline('.') ==# 'parent '
             silent keepjumps delete_
           else
-            silent exe 'keepjumps s/\m\C\%(^parent\)\@<! /\rparent /e' . (&gdefault ? '' : 'g')
+            silent exe (exists(':keeppatterns') ? 'keeppatterns' : '') 'keepjumps s/\m\C\%(^parent\)\@<! /\rparent /e' . (&gdefault ? '' : 'g')
           endif
           keepjumps let lnum = search('^encoding \%(<unknown>\)\=$','W',line('.')+3)
           if lnum
             silent keepjumps delete_
           end
-          silent keepjumps 1,/^diff --git\|\%$/g/\r$/s///
+          silent exe (exists(':keeppatterns') ? 'keeppatterns' : '') 'keepjumps 1,/^diff --git\|\%$/s/\r$//e'
           keepjumps 1
         endif
       elseif b:fugitive_type ==# 'stage'
@@ -3345,8 +3362,11 @@ function! s:Browse(bang,line1,count,...) abort
       else
         let commit = ''
         if len(merge)
-          let remotehead = cdir . '/refs/remotes/' . remote . '/' . merge
-          let commit = filereadable(remotehead) ? get(readfile(remotehead), 0, '') : ''
+          let owner = s:Owner(@%)
+          let commit = s:TreeChomp('merge-base', 'refs/remotes/' . remote . '/' . merge, empty(owner) ? 'HEAD' : owner, '--')
+          if v:shell_error
+            let commit = ''
+          endif
           if a:count && !a:0 && commit =~# '^\x\{40\}$'
             let blame_list = tempname()
             call writefile([commit, ''], blame_list, 'b')
@@ -3405,6 +3425,7 @@ function! s:Browse(bang,line1,count,...) abort
           \ 'line1': line1,
           \ 'line2': line2}
 
+    let url = ''
     for Handler in get(g:, 'fugitive_browse_handlers', [])
       let url = call(Handler, [copy(opts)])
       if !empty(url)
@@ -3734,7 +3755,7 @@ function! fugitive#Statusline(...) abort
   let status = ''
   let commit = s:DirCommitFile(@%)[1]
   if len(commit)
-    let status .= ':' . commit[0:7]
+    let status .= ':' . commit[0:6]
   endif
   let status .= '('.FugitiveHead(7).')'
   return '[Git'.status.']'

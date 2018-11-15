@@ -99,7 +99,8 @@ function! s:TreeDirNode.displayString()
     let l:label = ''
     let l:cascade = self.getCascade()
     for l:dirNode in l:cascade
-        let l:label .= l:dirNode.path.displayString()
+        let l:next = l:dirNode.path.displayString()
+        let l:label .= l:label == '' ? l:next : substitute(l:next,'^.','','')
     endfor
 
     " Select the appropriate open/closed status indicator symbol.
@@ -151,6 +152,32 @@ function! s:TreeDirNode.getCascade()
     let visChild = vc[0]
 
     return [self] + visChild.getCascade()
+endfunction
+
+" FUNCTION: TreeDirNode.getCascadeRoot() {{{1
+" Return the first directory node in the cascade in which this directory node
+" is rendered.
+function! s:TreeDirNode.getCascadeRoot()
+
+    " Don't search above the current NERDTree root node.
+    if self.isRoot()
+        return self
+    endif
+
+    let l:cascadeRoot = self
+    let l:parent = self.parent
+
+    while !empty(l:parent) && !l:parent.isRoot()
+
+        if index(l:parent.getCascade(), self) == -1
+            break
+        endif
+
+        let l:cascadeRoot = l:parent
+        let l:parent = l:parent.parent
+    endwhile
+
+    return l:cascadeRoot
 endfunction
 
 " FUNCTION: TreeDirNode.getChildCount() {{{1
@@ -278,9 +305,11 @@ function! s:TreeDirNode._glob(pattern, all)
         for l:file in l:globList
             let l:tail = fnamemodify(l:file, ':t')
 
-            " Double the modifier if only a separator was stripped.
+            " If l:file has a trailing slash, then its :tail will be ''. Use
+            " :h to drop the slash and the empty string after it; then use :t
+            " to get the directory name.
             if l:tail == ''
-                let l:tail = fnamemodify(l:file, ':t:t')
+                let l:tail = fnamemodify(l:file, ':h:t')
             endif
 
             if l:tail == '.' || l:tail == '..'

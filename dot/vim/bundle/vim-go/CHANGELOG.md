@@ -1,5 +1,18 @@
 ## unplanned
 
+IMPROVEMENTS:
+* disable `g:go_gocode_propose_source` by default.
+  [[GH-2050]](https://github.com/fatih/vim-go/pull/2050)
+
+BUG FIXES:
+* Fix opening of non-existent file from `:GoDeclsDir` when the current
+  directory is not the directory containing the current buffer.
+  [[GH-2048]](https://github.com/fatih/vim-go/pull/2048)
+* Fix jumping to an identifier with godef from a modified buffer.
+  [[GH-2054]](https://github.com/fatih/vim-go/pull/2054)
+
+## 1.19 - (November 4, 2018)
+
 FEATURES:
 
 * **go.mod file support!** This is the first feature for upcoming Go modules
@@ -47,9 +60,25 @@ IMPROVEMENTS:
   [[GH-1948]](https://github.com/fatih/vim-go/pull/1948)
 * Add `tt` snippet to create a table test boilerplate (see
   https://github.com/golang/go/wiki/TableDrivenTests for more information on
-  how to use a table driven test)
+  how to use a table driven test).
   [[GH-1956]](https://github.com/fatih/vim-go/pull/1956)
-
+* Add `<Plug>(go-decls)` and `<Plug>(go-decls-dir)` mappings.
+  [[GH-1964]](https://github.com/fatih/vim-go/pull/1964)
+* Handle go1.11 test output.
+  [[GH-1978]](https://github.com/fatih/vim-go/pull/1978)
+* Internal: install tools by their custom names
+  [[GH-1984]](https://github.com/fatih/vim-go/pull/1984)
+* Support the go-debugger features in Neovim.
+  [[GH-2007]](https://github.com/fatih/vim-go/pull/2007)
+* color the statusline for termguicolors and Neovim.
+  [[GH-2014]](https://github.com/fatih/vim-go/pull/2014)
+* add an option to disable highlighting of breakpoints and the current line
+  when debugging.
+  [[GH-2025]](https://github.com/fatih/vim-go/pull/2025)
+* Update autocompletion to work with Go modules.
+  [[GH-1988]](https://github.com/fatih/vim-go/pull/1988)
+* Add an option to search $GOPATH/bin or $GOBIN _after_ $PATH.
+  [[GH-2041]](https://github.com/fatih/vim-go/pull/2041)
 
 BUG FIXES:
 * Fix `:GoRun %` on Windows.
@@ -64,6 +93,14 @@ BUG FIXES:
   [[GH-1794]](https://github.com/fatih/vim-go/pull/1794)
 * Fix `:GoImport` when adding to an empty import block (i.e`import ()`)
   [[GH-1938]](https://github.com/fatih/vim-go/pull/1938)
+* Run shell commands with shellcmdflag set to `-c`.
+  [[GH-2006]](https://github.com/fatih/vim-go/pull/2006)
+* Use the correct log output option for delve.
+  [[GH-1992]](https://github.com/fatih/vim-go/pull/1992)
+* Pass empty arguments correctly in async jobs on Windows.
+  [[GH-2011]](https://github.com/fatih/vim-go/pull/2011)
+* Don't close godoc scratch window when using arrow keys.
+  [[GH-2021]](https://github.com/fatih/vim-go/pull/2021)
 
 BACKWARDS INCOMPATIBILITIES:
 * Bump minimum required version of Vim to 7.4.2009.
@@ -147,8 +184,7 @@ BUG FIXES:
 * The `gohtmltmpl` filetype will now highlight `{{ .. }}` syntax HTML attributes
   and some other locations.
   [[GH-1790]](https://github.com/fatih/vim-go/pull/1790)
-* Update using the correct logging flag option that was caused with the recent
-  delve changes
+* Use the correct logging flag argument for delve.
   [[GH-1809]](https://github.com/fatih/vim-go/pull/1809)
 * Fix gocode option string values that would cause gocode settings not to set
   correctly
