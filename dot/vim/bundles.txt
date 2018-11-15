@@ -11,7 +11,6 @@ git://github.com/tpope/vim-speeddating.git
 git://github.com/mileszs/ack.vim.git
 https://github.com/Lokaltog/vim-easymotion.git
 git://github.com/kien/ctrlp.vim.git
-https://github.com/kchmck/vim-coffee-script.git
 https://github.com/bling/vim-airline
 https://github.com/scrooloose/nerdtree
 git@github.com:leshill/vim-json.git
