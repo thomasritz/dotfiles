@@ -1,4 +1,8 @@
-function! go#lint#Gometa(autosave, ...) abort
+" don't spam the user when Vim is started in Vi compatibility mode
+let s:cpo_save = &cpo
+set cpo&vim
+
+function! go#lint#Gometa(bang, autosave, ...) abort
   if a:0 == 0
     let goargs = [expand('%:p:h')]
   else
@@ -57,7 +61,7 @@ function! go#lint#Gometa(autosave, ...) abort
   let cmd += goargs
 
   if go#util#has_job()
-    call s:lint_job({'cmd': cmd}, a:autosave)
+    call s:lint_job({'cmd': cmd}, a:bang, a:autosave)
     return
   endif
 
@@ -85,7 +89,7 @@ function! go#lint#Gometa(autosave, ...) abort
     let errors = go#list#Get(l:listtype)
     call go#list#Window(l:listtype, len(errors))
 
-    if !a:autosave
+    if !a:autosave && !a:bang
       call go#list#JumpToFirst(l:listtype)
     endif
   endif
@@ -93,7 +97,7 @@ endfunction
 
 " Golint calls 'golint' on the current directory. Any warnings are populated in
 " the location list
-function! go#lint#Golint(...) abort
+function! go#lint#Golint(bang, ...) abort
   if a:0 == 0
     let [l:out, l:err] = go#util#Exec([go#config#GolintBin(), go#package#ImportPath()])
   else
@@ -109,7 +113,9 @@ function! go#lint#Golint(...) abort
   call go#list#Parse(l:listtype, l:out, "GoLint")
   let l:errors = go#list#Get(l:listtype)
   call go#list#Window(l:listtype, len(l:errors))
-  call go#list#JumpToFirst(l:listtype)
+  if !a:bang
+    call go#list#JumpToFirst(l:listtype)
+  endif
 endfunction
 
 " Vet calls 'go vet' on the current directory. Any warnings are populated in
@@ -117,7 +123,9 @@ endfunction
 function! go#lint#Vet(bang, ...) abort
   call go#cmd#autowrite()
 
-  call go#util#EchoProgress('calling vet...')
+  if go#config#EchoCommandInfo()
+    call go#util#EchoProgress('calling vet...')
+  endif
 
   if a:0 == 0
     let [l:out, l:err] = go#util#Exec(['go', 'vet', go#package#ImportPath()])
@@ -134,7 +142,6 @@ function! go#lint#Vet(bang, ...) abort
     if !empty(errors) && !a:bang
       call go#list#JumpToFirst(l:listtype)
     endif
-    call go#util#EchoError('[vet] FAIL')
   else
     call go#list#Clean(l:listtype)
     call go#util#EchoSuccess('[vet] PASS')
@@ -143,7 +150,7 @@ endfunction
 
 " ErrCheck calls 'errcheck' for the given packages. Any warnings are populated in
 " the location list
-function! go#lint#Errcheck(...) abort
+function! go#lint#Errcheck(bang, ...) abort
   if a:0 == 0
     let l:import_path = go#package#ImportPath()
     if import_path == -1
@@ -175,7 +182,7 @@ function! go#lint#Errcheck(...) abort
     if !empty(errors)
       call go#list#Populate(l:listtype, errors, 'Errcheck')
       call go#list#Window(l:listtype, len(errors))
-      if !empty(errors)
+      if !a:bang
         call go#list#JumpToFirst(l:listtype)
       endif
     endif
@@ -196,11 +203,12 @@ function! go#lint#ToggleMetaLinterAutoSave() abort
   call go#util#EchoProgress("auto metalinter enabled")
 endfunction
 
-function! s:lint_job(args, autosave)
+function! s:lint_job(args, bang, autosave)
   let l:opts = {
         \ 'statustype': "gometalinter",
         \ 'errorformat': '%f:%l:%c:%t%*[^:]:\ %m,%f:%l::%t%*[^:]:\ %m',
         \ 'for': "GoMetaLinter",
+        \ 'bang': a:bang,
         \ }
 
   if a:autosave
@@ -212,5 +220,9 @@ function! s:lint_job(args, autosave)
 
   call go#job#Spawn(a:args.cmd, l:opts)
 endfunction
+
+" restore Vi compatibility settings
+let &cpo = s:cpo_save
+unlet s:cpo_save
 
 " vim: sw=2 ts=2 et
