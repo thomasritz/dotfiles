@@ -1,4 +1,4 @@
-" MIT License. Copyright (c) 2013-2018 Bailey Ling et al.
+" MIT License. Copyright (c) 2013-2019 Bailey Ling, Christian Brabandt et al.
 " vim: et ts=2 sts=2 sw=2
 
 scriptencoding utf-8
@@ -21,12 +21,21 @@ function! s:init()
   let s:theme_in_vimrc = exists('g:airline_theme')
   if s:theme_in_vimrc
     try
+      if g:airline_theme is# 'random'
+        let g:airline_theme=s:random_theme()
+      endif
       let palette = g:airline#themes#{g:airline_theme}#palette
     catch
       call airline#util#warning(printf('Could not resolve airline theme "%s". Themes have been migrated to github.com/vim-airline/vim-airline-themes.', g:airline_theme))
       let g:airline_theme = 'dark'
     endtry
-    silent call airline#switch_theme(g:airline_theme)
+    try
+      silent call airline#switch_theme(g:airline_theme)
+    catch
+      call airline#util#warning(printf('Could not find airline theme "%s".', g:airline_theme))
+      let g:airline_theme = 'dark'
+      silent call airline#switch_theme(g:airline_theme)
+    endtry
   else
     let g:airline_theme = 'dark'
     silent call s:on_colorscheme_changed()
@@ -57,6 +66,13 @@ function! s:on_window_changed()
   call airline#update_statusline()
 endfunction
 
+function! s:on_cursor_moved()
+  if winnr() != s:active_winnr
+    call s:on_window_changed()
+  endif
+  call airline#update_tabline()
+endfunction
+
 function! s:on_colorscheme_changed()
   call s:init()
   unlet! g:airline#highlighter#normal_fg_hi
@@ -84,12 +100,15 @@ function! s:airline_toggle()
     if exists("s:stl")
       let &stl = s:stl
     endif
+    if exists("s:tal")
+      let [&tal, &showtabline] = s:tal
+    endif
     call airline#highlighter#reset_hlcache()
 
     call airline#util#doautocmd('AirlineToggledOff')
   else
-    call s:init()
     let s:stl = &statusline
+    let s:tal = [&tabline, &showtabline]
     augroup airline
       autocmd!
 
@@ -114,10 +133,7 @@ function! s:airline_toggle()
         autocmd CompleteDone * call <sid>on_window_changed()
       endif
       " non-trivial number of external plugins use eventignore=all, so we need to account for that
-      autocmd CursorMoved *
-            \   if winnr() != s:active_winnr
-            \ |   call <sid>on_window_changed()
-            \ | endif
+      autocmd CursorMoved * call <sid>on_cursor_moved()
 
       autocmd VimResized * unlet! w:airline_lastmode | :call <sid>airline_refresh()
       if exists('*timer_start') && exists('*funcref')
@@ -138,6 +154,12 @@ function! s:airline_toggle()
       autocmd BufWritePost */autoload/airline/themes/*.vim
             \ exec 'source '.split(globpath(&rtp, 'autoload/airline/themes/'.g:airline_theme.'.vim', 1), "\n")[0]
             \ | call airline#load_theme()
+      autocmd User AirlineModeChanged nested call airline#mode_changed()
+
+      if get(g:, 'airline_statusline_ontop', 0)
+        " Force update of tabline more often
+        autocmd InsertEnter,InsertLeave,CursorMovedI * :call airline#update_tabline()
+      endif
     augroup END
 
     if &laststatus < 2
@@ -158,23 +180,35 @@ endfunction
 function! s:airline_theme(...)
   if a:0
     try
-      call airline#switch_theme(a:1)
+      let theme = a:1
+      if  theme is# 'random'
+        let theme = s:random_theme()
+      endif
+      call airline#switch_theme(theme)
     catch " discard error
     endtry
+    if a:1 is# 'random'
+      echo g:airline_theme
+    endif
   else
     echo g:airline_theme
   endif
 endfunction
 
-function! s:airline_refresh()
+function! s:airline_refresh(...)
+  " a:1, fast refresh, do not reload the theme
+  let fast=!empty(get(a:000, 0, 0))
   if !exists("#airline")
     " disabled
     return
   endif
   call airline#util#doautocmd('AirlineBeforeRefresh')
   call airline#highlighter#reset_hlcache()
-  call airline#load_theme()
+  if !fast
+    call airline#load_theme()
+  endif
   call airline#update_statusline()
+  call airline#update_tabline()
 endfunction
 
 function! s:FocusGainedHandler(timer)
@@ -189,20 +223,50 @@ function! s:airline_extensions()
   let loaded = airline#extensions#get_loaded_extensions()
   let files = split(globpath(&rtp, "autoload/airline/extensions/*.vim"), "\n")
   call map(files, 'fnamemodify(v:val, ":t:r")')
-  if !empty(files)
-    echohl Title
-    echo printf("%-15s\t%s", "Extension", "Status")
-    echohl Normal
+  if empty(files)
+    echo "No extensions loaded"
+    return
   endif
+  echohl Title
+  echo printf("%-15s\t%s\t%s", "Extension", "Extern", "Status")
+  echohl Normal
+  let set=[]
   for ext in sort(files)
-    echo printf("%-15s\t%sloaded", ext, (index(loaded, ext) == -1 ? 'not ' : ''))
+    if index(set, ext) > -1
+      continue
+    endif
+    let indx=match(loaded, '^'.ext.'\*\?$')
+    let external = (indx > -1 && loaded[indx] =~ '\*$')
+    echo printf("%-15s\t%s\t%sloaded", ext, external, indx == -1 ? 'not ' : '')
+    call add(set, ext)
   endfor
+endfunction
+
+function! s:rand(max) abort
+  if has("reltime")
+    let timerstr=reltimestr(reltime())
+    let number=split(timerstr, '\.')[1]+0
+  elseif has("win32") && &shell =~ 'cmd'
+    let number=system("echo %random%")+0
+  else
+    " best effort, bash and zsh provide $RANDOM
+    " cmd.exe on windows provides %random%, but expand()
+    " does not seem to be able to expand this correctly.
+    " In the worst case, this always returns zero
+    let number=expand("$RANDOM")+0
+  endif
+  return number % a:max
+endfunction
+
+function! s:random_theme() abort
+  let themes=airline#util#themes('')
+  return themes[s:rand(len(themes))]
 endfunction
 
 command! -bar -nargs=? -complete=customlist,<sid>get_airline_themes AirlineTheme call <sid>airline_theme(<f-args>)
 command! -bar AirlineToggleWhitespace call airline#extensions#whitespace#toggle()
 command! -bar AirlineToggle  call s:airline_toggle()
-command! -bar AirlineRefresh call s:airline_refresh()
+command! -bar -bang AirlineRefresh call s:airline_refresh(<q-bang>)
 command! AirlineExtensions   call s:airline_extensions()
 
 call airline#init#bootstrap()

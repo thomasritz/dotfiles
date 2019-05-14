@@ -31,7 +31,7 @@ function! sy#util#refresh_windows() abort
   endif
 
   if !get(g:, 'signify_cmdwin_active')
-    windo if exists('b:sy') | call sy#start() | endif
+    keepjumps windo if exists('b:sy') | call sy#start() | endif
   endif
 
   if exists('winid')
@@ -96,4 +96,14 @@ function! sy#util#return_if_no_changes() abort
     return 'return'
   endif
   return ''
+endfunction
+
+" Function: #execute {{{1
+function! sy#util#execute(cmd) abort
+  let lang = v:lang
+  redir => output
+    silent! execute a:cmd
+  redir END
+  silent! execute 'language message' lang
+  return output
 endfunction

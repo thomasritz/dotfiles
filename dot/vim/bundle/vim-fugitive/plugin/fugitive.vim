@@ -29,7 +29,7 @@ function! FugitiveCommonDir(...) abort
 endfunction
 
 function! FugitiveWorkTree(...) abort
-  return FugitiveTreeForGitDir(FugitiveGitDir(a:0 ? a:1 : -1))
+  return s:Tree(FugitiveGitDir(a:0 ? a:1 : -1))
 endfunction
 
 function! FugitiveReal(...) abort
@@ -72,8 +72,14 @@ function! FugitivePrepare(...) abort
   return call('fugitive#Prepare', a:000)
 endfunction
 
-function! FugitiveConfig(key, ...) abort
-  return fugitive#Config(a:key, FugitiveGitDir(a:0 ? a:1 : -1))
+function! FugitiveConfig(...) abort
+  if a:0 == 2 && type(a:2) != type({})
+    return fugitive#Config(a:1, FugitiveGitDir(a:2))
+  elseif a:0 == 1 && a:1 !~# '^[[:alnum:]-]\+\.'
+    return fugitive#Config(FugitiveGitDir(a:1))
+  else
+    return call('fugitive#Config', a:000)
+  endif
 endfunction
 
 function! FugitiveRemoteUrl(...) abort
@@ -104,7 +110,7 @@ endfunction
 
 let s:worktree_for_dir = {}
 let s:dir_for_worktree = {}
-function! FugitiveTreeForGitDir(path) abort
+function! s:Tree(path) abort
   let dir = a:path
   if dir =~# '/\.git$'
     return len(dir) ==# 5 ? '/' : dir[0:-6]
@@ -167,7 +173,7 @@ function! FugitiveExtractGitDir(path) abort
       return simplify(fnamemodify($GIT_DIR, ':p:s?[\/]$??'))
     endif
     if FugitiveIsGitDir($GIT_DIR)
-      call FugitiveWorkTree(simplify(fnamemodify($GIT_DIR, ':p:s?[\/]$??')))
+      call s:Tree(simplify(fnamemodify($GIT_DIR, ':p:s?[\/]$??')))
       if has_key(s:dir_for_worktree, root)
         return s:dir_for_worktree[root]
       endif
@@ -222,7 +228,7 @@ function! s:ProjectionistDetect() abort
   let dir = FugitiveExtractGitDir(file)
   let base = matchstr(file, '^fugitive://.\{-\}//\x\+')
   if empty(base)
-    let base = FugitiveTreeForGitDir(dir)
+    let base = s:Tree(dir)
   endif
   if len(base)
     if exists('+shellslash') && !&shellslash
@@ -245,17 +251,21 @@ augroup fugitive
   autocmd CmdWinEnter * call FugitiveDetect(expand('#:p'))
 
   autocmd FileType git
-        \ if exists('b:git_dir') |
+        \ if len(FugitiveGitDir()) |
         \   call fugitive#MapJumps() |
         \   call fugitive#MapCfile() |
         \ endif
   autocmd FileType gitcommit
-        \ if exists('b:git_dir') |
+        \ if len(FugitiveGitDir()) |
+        \   call fugitive#MapCfile('fugitive#MessageCfile()') |
+        \ endif
+  autocmd FileType fugitive
+        \ if len(FugitiveGitDir()) |
         \   call fugitive#MapCfile('fugitive#StatusCfile()') |
         \ endif
   autocmd FileType gitrebase
         \ let &l:include = '^\%(pick\|squash\|edit\|reword\|fixup\|drop\|[pserfd]\)\>' |
-        \ if exists('b:git_dir') |
+        \ if len(FugitiveGitDir()) |
         \   let &l:includeexpr = 'v:fname =~# ''^\x\{4,40\}$'' ? FugitiveFind(v:fname) : ' .
         \   (len(&l:includeexpr) ? &l:includeexpr : 'v:fname') |
         \ endif |
@@ -266,9 +276,14 @@ augroup fugitive
         \   let b:git_dir = s:Slash(expand('<amatch>:p:h')) |
         \   exe fugitive#BufReadStatus() |
         \ elseif filereadable(expand('<amatch>')) |
-        \   read <amatch> |
+        \   silent doautocmd BufReadPre |
+        \   keepalt read <amatch> |
         \   1delete_ |
+        \   silent doautocmd BufReadPost |
+        \ else |
+        \   silent doautocmd BufNewFile |
         \ endif
+
   autocmd BufReadCmd    fugitive://*//*             exe fugitive#BufReadCmd()
   autocmd BufWriteCmd   fugitive://*//[0-3]/*       exe fugitive#BufWriteCmd()
   autocmd FileReadCmd   fugitive://*//*             exe fugitive#FileReadCmd()

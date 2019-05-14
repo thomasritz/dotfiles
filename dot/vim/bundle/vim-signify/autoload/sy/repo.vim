@@ -73,13 +73,23 @@ function! sy#repo#get_diff_start(vcs) abort
     endif
 
     let [cmd, options] = s:initialize_job(a:vcs)
+    let [cwd, chdir] = sy#util#chdir()
 
-    call sy#verbose(printf('CMD: %s | CWD: %s', string(cmd), b:sy.info.dir), a:vcs)
+    call sy#verbose(['CMD: '. string(cmd), 'CMD DIR:  '. b:sy.info.dir, 'ORIG DIR: '. cwd], a:vcs)
+
+    try
+      execute chdir fnameescape(b:sy.info.dir)
+    catch
+      echohl ErrorMsg
+      echomsg 'signify: Changing directory failed: '. b:sy.info.dir
+      echohl NONE
+      return
+    endtry
     let b:sy_job_id_{a:vcs} = jobstart(cmd, extend(options, {
-          \ 'cwd':       b:sy.info.dir,
           \ 'on_stdout': function('s:callback_nvim_stdout'),
           \ 'on_exit':   function('s:callback_nvim_exit'),
           \ }))
+    execute chdir fnameescape(cwd)
 
   " Newer Vim
   elseif has('patch-7.4.1967')
@@ -90,19 +100,23 @@ function! sy#repo#get_diff_start(vcs) abort
     let [cmd, options] = s:initialize_job(a:vcs)
     let [cwd, chdir] = sy#util#chdir()
 
+    call sy#verbose(['CMD: '. string(cmd), 'CMD DIR:  '. b:sy.info.dir, 'ORIG DIR: '. cwd], a:vcs)
+
     try
       execute chdir fnameescape(b:sy.info.dir)
-      call sy#verbose(printf('CMD: %s | CWD: %s', string(cmd), getcwd()), a:vcs)
-      let opts = {
-            \ 'in_io':    'null',
-            \ 'out_cb':   function('s:callback_vim_stdout', options),
-            \ 'close_cb': function('s:callback_vim_close', options),
-            \ }
-      let b:sy_job_id_{a:vcs} = job_start(cmd, opts)
     catch
-    finally
-      execute chdir fnameescape(cwd)
+      echohl ErrorMsg
+      echomsg 'signify: Changing directory failed: '. b:sy.info.dir
+      echohl NONE
+      return
     endtry
+    let opts = {
+          \ 'in_io':    'null',
+          \ 'out_cb':   function('s:callback_vim_stdout', options),
+          \ 'close_cb': function('s:callback_vim_close', options),
+          \ }
+    let b:sy_job_id_{a:vcs} = job_start(cmd, opts)
+    execute chdir fnameescape(cwd)
 
   " Older Vim
   else
@@ -177,6 +191,8 @@ function! sy#repo#get_diff_cvs(sy, exitval, diff) abort
         break
       endif
     endfor
+  elseif a:exitval == 0 && len(a:diff) == 0
+    let found_diff = 1
   endif
   call s:get_diff_end(a:sy, found_diff, 'cvs', diff)
 endfunction
@@ -271,9 +287,9 @@ function! sy#repo#diffmode(do_tab) abort
     execute chdir fnameescape(cwd)
   endtry
   silent 1delete
-  diffthis
   set buftype=nofile bufhidden=wipe nomodified
   let &filetype = ft
+  diffthis
   wincmd p
   normal! ]czt
 endfunction
@@ -283,9 +299,15 @@ function! s:initialize_job(vcs) abort
   let vcs_cmd = s:expand_cmd(a:vcs, g:signify_vcs_cmds)
   if has('win32')
     if has('nvim')
-      let cmd = &shell =~ 'cmd' ? vcs_cmd : ['sh', '-c', vcs_cmd]
+      let cmd = &shell =~ '\v%(cmd|powershell)' ? vcs_cmd : ['sh', '-c', vcs_cmd]
     else
-      let cmd = join([&shell, &shellcmdflag, vcs_cmd])
+      if &shell =~ 'cmd'
+        let cmd = vcs_cmd
+      elseif empty(&shellxquote)
+        let cmd = join([&shell, &shellcmdflag, &shellquote, vcs_cmd, &shellquote])
+      else
+        let cmd = join([&shell, &shellcmdflag, &shellxquote, vcs_cmd, &shellxquote])
+      endif
     endif
   else
     let cmd = ['sh', '-c', vcs_cmd]
@@ -432,10 +454,11 @@ if executable(s:difftool)
         \ 'tfs':      'tf'
         \ }
 else
-  call sy#verbose('No "diff" executable found. Disable support for svn, darcs, bzr, fossil.')
+  call sy#verbose('No "diff" executable found. Disable support for svn, darcs, bzr.')
   let s:vcs_dict = {
         \ 'git':      'git',
         \ 'hg':       'hg',
+        \ 'fossil':   'fossil',
         \ 'cvs':      'cvs',
         \ 'rcs':      'rcsdiff',
         \ 'accurev':  'accurev',
@@ -455,7 +478,7 @@ let s:default_vcs_cmds = {
       \ 'svn':      'svn diff --diff-cmd %d -x -U0 -- %f',
       \ 'bzr':      'bzr diff --using %d --diff-options=-U0 -- %f',
       \ 'darcs':    'darcs diff --no-pause-for-gui --no-unified --diff-opts=-U0 -- %f',
-      \ 'fossil':   'fossil set diff-command "%d -U 0" && fossil diff --unified -c 0 -- %f',
+      \ 'fossil':   'fossil diff --unified -c 0 -- %f',
       \ 'cvs':      'cvs diff -U0 -- %f',
       \ 'rcs':      'rcsdiff -U0 %f 2>%n',
       \ 'accurev':  'accurev diff %f -- -U0',
@@ -469,6 +492,7 @@ let s:default_vcs_cmds_diffmode = {
       \ 'svn':      'svn cat %f',
       \ 'bzr':      'bzr cat %f',
       \ 'darcs':    'darcs show contents -- %f',
+      \ 'fossil':   'fossil cat %f',
       \ 'cvs':      'cvs up -p -- %f 2>%n',
       \ 'perforce': 'p4 print %f',
       \ }
