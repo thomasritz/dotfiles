@@ -1,4 +1,4 @@
-" MIT License. Copyright (c) 2013-2019 Bailey Ling et al.
+" MIT License. Copyright (c) 2013-2020 Bailey Ling et al.
 " vim: et ts=2 sts=2 sw=2 fdm=marker
 
 scriptencoding utf-8
@@ -6,6 +6,9 @@ scriptencoding utf-8
 " get wordcount {{{1
 if exists('*wordcount')
   function! s:get_wordcount(visual_mode_active)
+    if get(g:, 'actual_curbuf', '') != bufnr('')
+      return
+    endif
     let query = a:visual_mode_active ? 'visual_words' : 'words'
     return get(wordcount(), query, 0)
   endfunction

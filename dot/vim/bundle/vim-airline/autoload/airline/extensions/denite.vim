@@ -1,4 +1,5 @@
 " MIT License. Copyright (c) 2017-2019 Thomas Dy et al.
+" Plugin: https://github.com/Shougo/denite.nvim
 " vim: et ts=2 sts=2 sw=2
 
 scriptencoding utf-8
@@ -7,12 +8,12 @@ if !get(g:, 'loaded_denite', 0)
   finish
 endif
 
-let s:denite_ver = (exists('*get_status_mode') ? 2 : 3)
+let s:denite_ver = (exists('*denite#get_status_mode') ? 2 : 3)
 " Denite does not use vim's built-in modal editing but has a custom prompt
 " that implements its own insert/normal mode so we have to handle changing the
 " highlight
 function! airline#extensions#denite#check_denite_mode(bufnr)
-  if &filetype != 'denite'
+  if &filetype !=# 'denite' || &filetype !=# 'denite-filter'
     return ''
   endif
 
@@ -30,7 +31,7 @@ function! airline#extensions#denite#check_denite_mode(bufnr)
 endfunction
 
 function! airline#extensions#denite#apply(...)
-  if &ft == 'denite'
+  if &filetype ==# 'denite' || &filetype ==# 'denite-filter'
     let w:airline_skip_empty_sections = 0
     call a:1.add_section('airline_a', ' Denite %{airline#extensions#denite#check_denite_mode('.a:2['bufnr'].')}')
     if s:denite_ver == 3

@@ -49,13 +49,10 @@ endfunction
 function! go#list#Populate(listtype, items, title) abort
   if a:listtype == "locationlist"
     call setloclist(0, a:items, 'r')
-
-    " The last argument ({what}) is introduced with 7.4.2200:
-    " https://github.com/vim/vim/commit/d823fa910cca43fec3c31c030ee908a14c272640
-    if has("patch-7.4.2200") | call setloclist(0, [], 'a', {'title': a:title}) | endif
+    call setloclist(0, [], 'a', {'title': a:title})
   else
     call setqflist(a:items, 'r')
-    if has("patch-7.4.2200") | call setqflist([], 'a', {'title': a:title}) | endif
+    call setqflist([], 'a', {'title': a:title})
   endif
 endfunction
 
@@ -80,10 +77,10 @@ endfunction
 function! go#list#Parse(listtype, items, title) abort
   if a:listtype == "locationlist"
     lgetexpr a:items
-    if has("patch-7.4.2200") | call setloclist(0, [], 'a', {'title': a:title}) | endif
+    call setloclist(0, [], 'a', {'title': a:title})
   else
     cgetexpr a:items
-    if has("patch-7.4.2200") | call setqflist([], 'a', {'title': a:title}) | endif
+    call setqflist([], 'a', {'title': a:title})
   endif
 endfunction
 
@@ -138,6 +135,7 @@ endfunction
 " in g:go_list_type_commands.
 let s:default_list_type_commands = {
       \ "GoBuild":              "quickfix",
+      \ "GoDiagnostics":        "quickfix",
       \ "GoDebug":              "quickfix",
       \ "GoErrCheck":           "quickfix",
       \ "GoFmt":                "locationlist",
@@ -152,6 +150,7 @@ let s:default_list_type_commands = {
       \ "GoRun":                "quickfix",
       \ "GoTest":               "quickfix",
       \ "GoVet":                "quickfix",
+      \ "GoReferrers":          "quickfix",
       \ "_guru":                "locationlist",
       \ "_term":                "locationlist",
       \ "_job":                 "locationlist",

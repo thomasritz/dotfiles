@@ -11,7 +11,8 @@ function! go#lint#Gometa(bang, autosave, ...) abort
 
   let l:metalinter = go#config#MetalinterCommand()
 
-  if l:metalinter == 'gometalinter' || l:metalinter == 'golangci-lint'
+  let cmd = []
+  if l:metalinter == 'golangci-lint'
     let cmd = s:metalintercmd(l:metalinter)
     if empty(cmd)
       return
@@ -22,11 +23,7 @@ function! go#lint#Gometa(bang, autosave, ...) abort
     for linter in linters
       let cmd += ["--enable=".linter]
     endfor
-
-    for linter in go#config#MetalinterDisabled()
-      let cmd += ["--disable=".linter]
-    endfor
-  else
+  elseif l:metalinter != 'gopls'
     " the user wants something else, let us use it.
     let cmd = split(go#config#MetalinterCommand(), " ")
   endif
@@ -36,15 +33,8 @@ function! go#lint#Gometa(bang, autosave, ...) abort
     " will be cleared
     redraw
 
-    if l:metalinter == "gometalinter"
-      " Include only messages for the active buffer for autosave.
-      let include = [printf('--include=^%s:.*$', fnamemodify(expand('%:p'), ":."))]
-      if go#util#has_job()
-        let include = [printf('--include=^%s:.*$', expand('%:p:t'))]
-      endif
-      let cmd += include
-    elseif l:metalinter == "golangci-lint"
-      let goargs[0] = expand('%:p')
+    if l:metalinter == "golangci-lint"
+      let goargs[0] = expand('%:p:h')
     endif
   endif
 
@@ -56,25 +46,35 @@ function! go#lint#Gometa(bang, autosave, ...) abort
 
   let cmd += goargs
 
-  if l:metalinter == "gometalinter"
-    " Gometalinter can output one of the two, so we look for both:
-    "   <file>:<line>:<column>:<severity>: <message> (<linter>)
-    "   <file>:<line>::<severity>: <message> (<linter>)
-    " This can be defined by the following errorformat:
-    let errformat = "%f:%l:%c:%t%*[^:]:\ %m,%f:%l::%t%*[^:]:\ %m"
+  let errformat = s:errorformat(l:metalinter)
+
+  if l:metalinter == 'gopls'
+    if a:autosave
+      let l:messages = go#lsp#AnalyzeFile(expand('%:p'))
+    else
+      let l:import_paths = l:goargs
+      if len(l:import_paths) == 0
+        let l:pkg = go#package#ImportPath()
+        if l:pkg == -1
+          call go#util#EchoError('could not determine package name')
+          return
+        endif
+
+        let l:import_paths = [l:pkg]
+      endif
+      let l:messages = call('go#lsp#Diagnostics', l:import_paths)
+    endif
+
+    let l:err = len(l:messages)
   else
-    " Golangci-lint can output the following:
-    "   <file>:<line>:<column>: <message> (<linter>)
-    " This can be defined by the following errorformat:
-    let errformat = "%f:%l:%c:\ %m"
-  endif
+    if go#util#has_job()
+      call s:lint_job({'cmd': cmd, 'statustype': l:metalinter, 'errformat': errformat}, a:bang, a:autosave)
+      return
+    endif
 
-  if go#util#has_job()
-    call s:lint_job({'cmd': cmd, 'statustype': l:metalinter, 'errformat': errformat}, a:bang, a:autosave)
-    return
+    let [l:out, l:err] = go#util#Exec(cmd)
+    let l:messages = split(out, "\n")
   endif
-
-  let [l:out, l:err] = go#util#Exec(cmd)
 
   if a:autosave
     let l:listtype = go#list#Type("GoMetaLinterAutoSave")
@@ -84,20 +84,62 @@ function! go#lint#Gometa(bang, autosave, ...) abort
 
   if l:err == 0
     call go#list#Clean(l:listtype)
-    echon "vim-go: " | echohl Function | echon "[metalinter] PASS" | echohl None
+    call go#util#EchoSuccess('[metalinter] PASS')
   else
     let l:winid = win_getid(winnr())
     " Parse and populate our location list
-    call go#list#ParseFormat(l:listtype, errformat, split(out, "\n"), 'GoMetaLinter')
+
+    if a:autosave && l:metalinter != 'gopls'
+      call s:metalinterautosavecomplete(fnamemodify(expand('%:p'), ":."), 0, 1, l:messages)
+    endif
+    call go#list#ParseFormat(l:listtype, errformat, l:messages, 'GoMetaLinter')
 
     let errors = go#list#Get(l:listtype)
     call go#list#Window(l:listtype, len(errors))
 
     if a:autosave || a:bang
       call win_gotoid(l:winid)
+    else
+      call go#list#JumpToFirst(l:listtype)
+    endif
+  endif
+endfunction
+
+function! go#lint#Diagnostics(bang, ...) abort
+  if a:0 == 0
+    let l:pkg = go#package#ImportPath()
+    if l:pkg == -1
+      call go#util#EchoError('could not determine package name')
       return
     endif
-    call go#list#JumpToFirst(l:listtype)
+
+    let l:import_paths = [l:pkg]
+  else
+    let l:import_paths = a:000
+  endif
+
+  let errformat = s:errorformat('gopls')
+
+  let l:messages = call('go#lsp#Diagnostics', l:import_paths)
+
+  let l:listtype = go#list#Type("GoDiagnostics")
+
+  if len(l:messages) == 0
+    call go#list#Clean(l:listtype)
+    call go#util#EchoSuccess('[diagnostics] PASS')
+  else
+    " Parse and populate the quickfix list
+    let l:winid = win_getid(winnr())
+    call go#list#ParseFormat(l:listtype, errformat, l:messages, 'GoDiagnostics')
+
+    let errors = go#list#Get(l:listtype)
+    call go#list#Window(l:listtype, len(errors))
+
+    if a:bang
+      call win_gotoid(l:winid)
+    else
+      call go#list#JumpToFirst(l:listtype)
+    endif
   endif
 endfunction
 
@@ -105,7 +147,7 @@ endfunction
 " the location list
 function! go#lint#Golint(bang, ...) abort
   if a:0 == 0
-    let [l:out, l:err] = go#util#Exec([go#config#GolintBin(), go#package#ImportPath()])
+    let [l:out, l:err] = go#util#Exec([go#config#GolintBin(), expand('%:p:h')])
   else
     let [l:out, l:err] = go#util#Exec([go#config#GolintBin()] + a:000)
   endif
@@ -123,10 +165,9 @@ function! go#lint#Golint(bang, ...) abort
 
   if a:bang
     call win_gotoid(l:winid)
-    return
+  else
+    call go#list#JumpToFirst(l:listtype)
   endif
-
-  call go#list#JumpToFirst(l:listtype)
 endfunction
 
 " Vet calls 'go vet' on the current directory. Any warnings are populated in
@@ -138,20 +179,35 @@ function! go#lint#Vet(bang, ...) abort
     call go#util#EchoProgress('calling vet...')
   endif
 
-  if a:0 == 0
-    let [l:out, l:err] = go#util#Exec(['go', 'vet', go#package#ImportPath()])
-  else
-    let [l:out, l:err] = go#util#Exec(['go', 'tool', 'vet'] + a:000)
+  let l:cmd = ['go', 'vet']
+
+  let buildtags = go#config#BuildTags()
+  if buildtags isnot ''
+    let cmd += ['-tags', buildtags]
   endif
+
+  if a:0 != 0
+    call extend(cmd, a:000)
+  endif
+
+  let cmd += [go#package#ImportPath()]
+
+  let [l:out, l:err] = go#util#Exec(l:cmd)
 
   let l:listtype = go#list#Type("GoVet")
   if l:err != 0
     let l:winid = win_getid(winnr())
-    let errorformat = "%-Gexit status %\\d%\\+," . &errorformat
+    let l:errorformat = "%-Gexit status %\\d%\\+," . &errorformat
     call go#list#ParseFormat(l:listtype, l:errorformat, out, "GoVet")
-    let errors = go#list#Get(l:listtype)
-    call go#list#Window(l:listtype, len(errors))
-    if !empty(errors) && !a:bang
+    let l:errors = go#list#Get(l:listtype)
+
+    if empty(l:errors)
+      call go#util#EchoError(l:out)
+      return
+    endif
+
+    call go#list#Window(l:listtype, len(l:errors))
+    if !empty(l:errors) && !a:bang
       call go#list#JumpToFirst(l:listtype)
     else
       call win_gotoid(l:winid)
@@ -183,10 +239,12 @@ function! go#lint#Errcheck(bang, ...) abort
   let l:listtype = go#list#Type("GoErrCheck")
   if l:err != 0
     let l:winid = win_getid(winnr())
-    let errformat = "%f:%l:%c:\ %m, %f:%l:%c\ %#%m"
 
-    " Parse and populate our location list
-    call go#list#ParseFormat(l:listtype, errformat, split(out, "\n"), 'Errcheck')
+    if l:err == 1
+      let l:errformat = "%f:%l:%c:\ %m,%f:%l:%c\ %#%m"
+      " Parse and populate our location list
+      call go#list#ParseFormat(l:listtype, l:errformat, split(out, "\n"), 'Errcheck')
+    endif
 
     let l:errors = go#list#Get(l:listtype)
     if empty(l:errors)
@@ -195,8 +253,8 @@ function! go#lint#Errcheck(bang, ...) abort
     endif
 
     if !empty(errors)
-      call go#list#Populate(l:listtype, errors, 'Errcheck')
-      call go#list#Window(l:listtype, len(errors))
+      call go#list#Populate(l:listtype, l:errors, 'Errcheck')
+      call go#list#Window(l:listtype, len(l:errors))
       if !a:bang
         call go#list#JumpToFirst(l:listtype)
       else
@@ -230,6 +288,8 @@ function! s:lint_job(args, bang, autosave)
 
   if a:autosave
     let l:opts.for = "GoMetaLinterAutoSave"
+    " s:metalinterautosavecomplete is really only needed for golangci-lint
+    let l:opts.complete = funcref('s:metalinterautosavecomplete', [expand('%:p:t')])
   endif
 
   " autowrite is not enabled for jobs
@@ -242,26 +302,11 @@ function! s:metalintercmd(metalinter)
   let l:cmd = []
   let bin_path = go#path#CheckBinPath(a:metalinter)
   if !empty(bin_path)
-    if a:metalinter == "gometalinter"
-      let l:cmd = s:gometalintercmd(bin_path)
-    elseif a:metalinter == "golangci-lint"
+    if a:metalinter == "golangci-lint"
       let l:cmd = s:golangcilintcmd(bin_path)
     endif
   endif
 
-  return cmd
-endfunction
-
-function! s:gometalintercmd(bin_path)
-  let cmd = [a:bin_path]
-  let cmd += ["--disable-all"]
-
-  " gometalinter has a --tests flag to tell its linters whether to run
-  " against tests. While not all of its linters respect this flag, for those
-  " that do, it means if we don't pass --tests, the linter won't run against
-  " test files. One example of a linter that will not run against tests if
-  " we do not specify this flag is errcheck.
-  let cmd += ["--tests"]
   return cmd
 endfunction
 
@@ -277,6 +322,32 @@ function! s:golangcilintcmd(bin_path)
   let cmd += ["--exclude-use-default=false"]
 
   return cmd
+endfunction
+
+function! s:metalinterautosavecomplete(filepath, job, exit_code, messages)
+  if len(a:messages) == 0
+    return
+  endif
+
+  let l:idx = len(a:messages) - 1
+  while l:idx >= 0
+    if a:messages[l:idx] !~# '^' . a:filepath . ':'
+      call remove(a:messages, l:idx)
+    endif
+    let l:idx -= 1
+  endwhile
+endfunction
+
+function! s:errorformat(metalinter) abort
+  if a:metalinter == 'golangci-lint'
+    " Golangci-lint can output the following:
+    "   <file>:<line>:<column>: <message> (<linter>)
+    " This can be defined by the following errorformat:
+    return '%f:%l:%c:\ %m'
+  elseif a:metalinter == 'gopls'
+    return '%f:%l:%c:%t:\ %m,%f:%l:%c::\ %m'
+  endif
+
 endfunction
 
 " restore Vi compatibility settings

@@ -82,11 +82,13 @@ endfunction
 
 function! go#tool#Info(showstatus) abort
   let l:mode = go#config#InfoMode()
-  if l:mode == 'gocode'
-    call go#complete#Info(a:showstatus)
-  elseif l:mode == 'guru'
+  if l:mode == 'guru'
     call go#guru#DescribeInfo(a:showstatus)
   elseif l:mode == 'gopls'
+    if !go#config#GoplsEnabled()
+      call go#util#EchoError("go_info_mode is 'gopls', but gopls is disabled")
+      return
+    endif
     call go#lsp#Info(a:showstatus)
   else
     call go#util#EchoError('go_info_mode value: '. l:mode .' is not valid. Valid values are: [gocode, guru, gopls]')
@@ -115,7 +117,15 @@ endfunction
 
 function! go#tool#DescribeBalloon()
   let l:fname = fnamemodify(bufname(v:beval_bufnr), ':p')
-  call go#lsp#Hover(l:fname, v:beval_lnum, v:beval_col, funcref('s:balloon', []))
+
+  let l:winid = win_getid()
+
+  call win_gotoid(bufwinid(v:beval_bufnr))
+
+  let [l:line, l:col] = go#lsp#lsp#Position(v:beval_lnum, v:beval_col)
+  call go#lsp#Hover(l:fname, l:line, l:col, funcref('s:balloon', []))
+
+  call win_gotoid(l:winid)
   return ''
 endfunction
 

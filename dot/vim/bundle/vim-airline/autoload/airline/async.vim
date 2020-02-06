@@ -1,4 +1,4 @@
-" MIT License. Copyright (c) 2013-2019 Christian Brabandt et al.
+" MIT License. Copyright (c) 2013-2020 Christian Brabandt et al.
 " vim: et ts=2 sts=2 sw=2
 
 scriptencoding utf-8
@@ -66,10 +66,14 @@ endfunction
 
 function! s:set_clean_variables(file, vcs, val)
   let var=getbufvar(fnameescape(a:file), 'buffer_vcs_config', {})
-  if has_key(var, a:vcs) && has_key(var[a:vcs], 'dirty')
+  if has_key(var, a:vcs) && has_key(var[a:vcs], 'dirty') &&
+        \ type(getbufvar(fnameescape(a:file), 'buffer_vcs_config')) == type({})
     let var[a:vcs].dirty=a:val
-    call setbufvar(fnameescape(a:file), 'buffer_vcs_config', var)
-    unlet! b:airline_head
+    try
+      call setbufvar(fnameescape(a:file), 'buffer_vcs_config', var)
+      unlet! b:airline_head
+    catch
+    endtry
   endif
 endfunction
 
@@ -127,10 +131,10 @@ if v:version >= 800 && has("job")
   endfunction
 
   function! airline#async#get_mq_async(cmd, file)
-    if g:airline#init#is_windows && &shell =~ 'cmd'
+    if g:airline#init#is_windows && &shell =~ 'cmd\|powershell'
       let cmd = a:cmd
     else
-      let cmd = ['sh', '-c', a:cmd]
+      let cmd = [&shell, &shellcmdflag, a:cmd]
     endif
 
     let options = {'cmd': a:cmd, 'buf': '', 'file': a:file}
@@ -172,10 +176,10 @@ if v:version >= 800 && has("job")
   endfunction
 
   function! airline#async#vim_vcs_clean(cmd, file, vcs)
-    if g:airline#init#is_windows && &shell =~ 'cmd'
+    if g:airline#init#is_windows && &shell =~ 'cmd\|powershell'
       let cmd = a:cmd
     else
-      let cmd = ['sh', '-c', a:cmd]
+      let cmd = [&shell, &shellcmdflag, a:cmd]
     endif
 
     let options = {'buf': '', 'vcs': a:vcs, 'file': a:file}
@@ -184,7 +188,10 @@ if v:version >= 800 && has("job")
       if job_status(get(jobs, a:file)) == 'run'
         return
       elseif has_key(jobs, a:file)
-        call remove(jobs, a:file)
+        " still running
+        return
+        " jobs dict should be cleaned on exit, so not needed here
+        " call remove(jobs, a:file)
       endif
     endif
     let id = job_start(cmd, {
@@ -195,10 +202,10 @@ if v:version >= 800 && has("job")
   endfunction
 
   function! airline#async#vim_vcs_untracked(config, file)
-    if g:airline#init#is_windows && &shell =~ 'cmd'
+    if g:airline#init#is_windows && &shell =~ 'cmd\|powershell'
       let cmd = a:config['cmd'] . shellescape(a:file)
     else
-      let cmd = ['sh', '-c', a:config['cmd'] . shellescape(a:file)]
+      let cmd = [&shell, &shellcmdflag, a:config['cmd'] . shellescape(a:file)]
     endif
 
     let options = {'cfg': a:config, 'buf': '', 'file': a:file}
@@ -256,10 +263,10 @@ elseif has("nvim")
     \ 'on_stderr': function('s:nvim_output_handler'),
     \ 'on_exit': function('s:nvim_mq_job_handler')
     \ }
-    if g:airline#init#is_windows && &shell =~ 'cmd'
+    if g:airline#init#is_windows && &shell =~ 'cmd\|powershell'
       let cmd = a:cmd
     else
-      let cmd = ['sh', '-c', a:cmd]
+      let cmd = [&shell, &shellcmdflag, a:cmd]
     endif
 
     if has_key(s:mq_jobs, a:file)
@@ -278,11 +285,11 @@ elseif has("nvim")
     \ 'on_stderr': function('s:nvim_output_handler'),
     \ 'on_exit': function('s:nvim_po_job_handler')
     \ }
-    if g:airline#init#is_windows && &shell =~ 'cmd'
+    if g:airline#init#is_windows && &shell =~ 'cmd\|powershell'
       " no msgfmt on windows?
       return
     else
-      let cmd = ['sh', '-c', a:cmd. shellescape(a:file)]
+      let cmd = [&shell, &shellcmdflag, a:cmd. shellescape(a:file)]
     endif
 
     if has_key(s:po_jobs, a:file)
@@ -301,17 +308,20 @@ elseif has("nvim")
     \ 'on_stdout': function('s:nvim_output_handler'),
     \ 'on_stderr': function('s:nvim_output_handler'),
     \ 'on_exit': function('s:on_exit_clean')}
-    if g:airline#init#is_windows && &shell =~ 'cmd'
+    if g:airline#init#is_windows && &shell =~ 'cmd\|powershell'
       let cmd = a:cmd
     else
-      let cmd = ['sh', '-c', a:cmd]
+      let cmd = [&shell, &shellcmdflag, a:cmd]
     endif
 
     if !has_key(s:clean_jobs, a:vcs)
       let s:clean_jobs[a:vcs] = {}
     endif
     if has_key(s:clean_jobs[a:vcs], a:file)
-      call remove(s:clean_jobs[a:vcs], a:file)
+      " still running
+      return
+      " jobs dict should be cleaned on exit, so not needed here
+      " call remove(s:clean_jobs[a:vcs], a:file)
     endif
     let id = jobstart(cmd, config)
     call s:set_clean_jobs_variable(a:vcs, a:file, id)
@@ -359,6 +369,8 @@ function! airline#async#vim7_vcs_clean(cmd, file, vcs)
   " don't want to to see error messages
   if g:airline#init#is_windows && &shell =~ 'cmd'
     let cmd = a:cmd .' 2>nul'
+  elseif g:airline#init#is_windows && &shell =~ 'powerline'
+    let cmd = a:cmd .' 2> $null'
   else
     let cmd = a:cmd .' 2>/dev/null'
   endif

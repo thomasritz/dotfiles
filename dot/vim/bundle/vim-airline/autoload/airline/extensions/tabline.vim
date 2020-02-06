@@ -1,4 +1,4 @@
-" MIT License. Copyright (c) 2013-2019 Bailey Ling et al.
+" MIT License. Copyright (c) 2013-2020 Bailey Ling et al.
 " vim: et ts=2 sts=2 sw=2
 
 scriptencoding utf-8
@@ -9,6 +9,7 @@ if s:taboo
 endif
 
 let s:ctrlspace = get(g:, 'CtrlSpaceLoaded', 0)
+let s:tabws = get(g:, 'tabws_loaded', 0)
 
 function! airline#extensions#tabline#init(ext)
   if has('gui_running')
@@ -29,6 +30,9 @@ function! s:toggle_off()
   if s:ctrlspace
     call airline#extensions#tabline#ctrlspace#off()
   endif
+  if s:tabws
+    call airline#extensions#tabline#tabws#off()
+  endif
 endfunction
 
 function! s:toggle_on()
@@ -43,12 +47,20 @@ function! s:toggle_on()
   if s:ctrlspace
     call airline#extensions#tabline#ctrlspace#on()
   endif
+  if s:tabws
+    call airline#extensions#tabline#tabws#on()
+  endif
 
   set tabline=%!airline#extensions#tabline#get()
 endfunction
 
-function! s:update_tabline()
+function! s:update_tabline(forceit)
   if get(g:, 'airline#extensions#tabline#disable_refresh', 0)
+    return
+  endif
+  " loading a session file
+  " On SessionLoadPost, g:SessionLoad variable is still set :/
+  if !a:forceit && get(g:, 'SessionLoad', 0)
     return
   endif
   let match = expand('<afile>')
@@ -57,8 +69,7 @@ function! s:update_tabline()
   elseif !get(g:, 'airline#extensions#tabline#enabled', 0)
     return
   " return, if buffer matches ignore pattern or is directory (netrw)
-  elseif empty(match) || airline#util#ignore_buf(match)
-        \ || isdirectory(expand("<afile>"))
+  elseif empty(match) || airline#util#ignore_buf(match) || isdirectory(match)
     return
   endif
   call airline#util#doautocmd('BufMRUChange')
@@ -145,13 +156,19 @@ function! airline#extensions#tabline#get()
     call airline#extensions#tabline#tabs#invalidate()
     call airline#extensions#tabline#buffers#invalidate()
     call airline#extensions#tabline#ctrlspace#invalidate()
+    call airline#extensions#tabline#tabws#invalidate()
   endif
 
   if !exists('#airline#BufAdd#*')
-    autocmd airline BufAdd * call <sid>update_tabline()
+    autocmd airline BufAdd * call <sid>update_tabline(0)
+  endif
+  if !exists('#airline#SessionLoadPost')
+    autocmd airline SessionLoadPost * call <sid>update_tabline(1)
   endif
   if s:ctrlspace
     return airline#extensions#tabline#ctrlspace#get()
+  elseif s:tabws
+    return airline#extensions#tabline#tabws#get()
   elseif show_buffers && curtabcnt == 1 || !show_tabs
     return airline#extensions#tabline#buffers#get()
   else

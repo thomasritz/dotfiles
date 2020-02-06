@@ -97,7 +97,7 @@ augroup railsPluginDetect
         \ endif
   autocmd FileType * if RailsDetect() | call rails#buffer_setup() | endif
 
-  autocmd BufNewFile,BufReadPost *.yml,*.yml.example,*.yml.sample
+  autocmd BufNewFile,BufReadPost */config/*.yml{,.example,.sample},*/{test,spec}/fixtures/*.yml
         \ if &filetype !=# 'eruby.yaml' && RailsDetect() |
         \   set filetype=eruby.yaml |
         \ endif
@@ -114,7 +114,7 @@ augroup railsPluginDetect
         \ endif
 augroup END
 
-command! -bang -bar -nargs=* -count -complete=customlist,rails#complete_rails Rails execute rails#command(<bang>0, '<mods>', !<count> && <line1> ? -1 : <count>, <q-args>)
+command! -bang -bar -nargs=* -range=-1 -complete=customlist,rails#complete_rails Rails execute rails#command(<bang>0, '<mods>', <count>, <q-args>)
 
 " }}}1
 " dadbod.vim support {{{1

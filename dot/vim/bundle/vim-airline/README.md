@@ -1,4 +1,4 @@
-# vim-airline [![Build Status](https://travis-ci.org/vim-airline/vim-airline.png)](https://travis-ci.org/vim-airline/vim-airline)
+# vim-airline [![Build Status](https://travis-ci.org/vim-airline/vim-airline.png)](https://travis-ci.org/vim-airline/vim-airline)[![Say Thanks!](https://img.shields.io/badge/Say%20Thanks-!-1EAEDB.svg)](https://saythanks.io/to/chrisbra)
 
 Lean &amp; mean status/tabline for vim that's light as air.
 
@@ -16,7 +16,7 @@ information. By default (without configuration) this line will look like this:
 |~                                                                            |
 |~                     VIM - Vi IMproved                                      |
 |~                                                                            |
-|~                       version 8.0                                          |
+|~                       version 8.2                                          |
 |~                    by Bram Moolenaar et al.                                |
 |~           Vim is open source and freely distributable                      |
 |~                                                                            |
@@ -292,7 +292,7 @@ If you are interested in becoming a maintainer (we always welcome more maintaine
 
 # License
 
-[MIT License][58]. Copyright (c) 2013-2019 Bailey Ling & Contributors.
+[MIT License][58]. Copyright (c) 2013-2020 Bailey Ling & Contributors.
 
 [1]: https://github.com/Lokaltog/vim-powerline
 [2]: https://github.com/Lokaltog/powerline
@@ -311,7 +311,7 @@ If you are interested in becoming a maintainer (we always welcome more maintaine
 [15]: https://github.com/techlivezheng/vim-plugin-minibufexpl
 [16]: https://github.com/sjl/gundo.vim
 [17]: https://github.com/mbbill/undotree
-[18]: https://github.com/scrooloose/nerdtree
+[18]: https://github.com/preservim/nerdtree
 [19]: https://github.com/majutsushi/tagbar
 [20]: https://powerline.readthedocs.org/en/master/installation.html#patched-fonts
 [21]: https://bitbucket.org/ludovicchabant/vim-lawrencium
@@ -331,7 +331,7 @@ If you are interested in becoming a maintainer (we always welcome more maintaine
 [35]: https://github.com/edkolev/tmuxline.vim
 [36]: https://github.com/edkolev/promptline.vim
 [37]: https://github.com/gcmt/taboo.vim
-[38]: https://github.com/szw/vim-ctrlspace
+[38]: https://github.com/vim-ctrlspace/vim-ctrlspace
 [39]: https://github.com/tomtom/quickfixsigns_vim
 [40]: https://github.com/junegunn/vim-plug
 [41]: https://github.com/bling

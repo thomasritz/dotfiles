@@ -76,6 +76,54 @@ function! go#doc#Open(newmode, mode, ...) abort
 endfunction
 
 function! s:GodocView(newposition, position, content) abort
+  " popup window
+  if go#config#DocPopupWindow()
+    if exists('*popup_atcursor') && exists('*popup_clear')
+      call popup_clear()
+
+      call popup_atcursor(split(a:content, '\n'), {
+            \ 'padding': [1, 1, 1, 1],
+            \ 'borderchars': ['-','|','-','|','+','+','+','+'],
+            \ "border": [1, 1, 1, 1],
+            \ })
+    elseif has('nvim') && exists('*nvim_open_win')
+      let lines = split(a:content, '\n')
+      let height = 0
+      let width = 0
+      for line in lines
+        let lw = strdisplaywidth(line)
+        if lw > width
+          let width = lw
+        endif
+        let height += 1
+      endfor
+      let width += 1 " right margin
+      let max_height = go#config#DocMaxHeight()
+      if height > max_height
+        let height = max_height
+      endif
+
+      let buf = nvim_create_buf(v:false, v:true)
+      call nvim_buf_set_lines(buf, 0, -1, v:true, lines)
+      let opts = {
+            \ 'relative': 'cursor',
+            \ 'row': 1,
+            \ 'col': 0,
+            \ 'width': width,
+            \ 'height': height,
+            \ 'style': 'minimal',
+            \ }
+      call nvim_open_win(buf, v:true, opts)
+      setlocal nomodified nomodifiable filetype=godoc
+
+      " close easily with CR, Esc and q
+      noremap <buffer> <silent> <CR> :<C-U>close<CR>
+      noremap <buffer> <silent> <Esc> :<C-U>close<CR>
+      noremap <buffer> <silent> q :<C-U>close<CR>
+    endif
+    return
+  endif
+
   " reuse existing buffer window if it exists otherwise create a new one
   let is_visible = bufexists(s:buf_nr) && bufwinnr(s:buf_nr) != -1
   if !bufexists(s:buf_nr)

@@ -6,7 +6,7 @@ let s:go_stack = []
 let s:go_stack_level = 0
 
 function! go#def#Jump(mode, type) abort
-  let fname = fnamemodify(expand("%"), ':p:gs?\\?/?')
+  let l:fname = fnamemodify(expand("%"), ':p:gs?\\?/?')
 
   " so guru right now is slow for some people. previously we were using
   " godef which also has it's own quirks. But this issue come up so many
@@ -66,7 +66,12 @@ function! go#def#Jump(mode, type) abort
       let [l:out, l:err] = go#util#ExecInDir(l:cmd)
     endif
   elseif bin_name == 'gopls'
-    let [l:line, l:col] = getpos('.')[1:2]
+    if !go#config#GoplsEnabled()
+      call go#util#EchoError("go_def_mode is 'gopls', but gopls is disabled")
+      return
+    endif
+
+    let [l:line, l:col] = go#lsp#lsp#Position()
     " delegate to gopls, with an empty job object and an exit status of 0
     " (they're irrelevant for gopls).
     if a:type
@@ -162,9 +167,9 @@ function! go#def#jump_to_declaration(out, mode, bin_name) abort
   if filename != fnamemodify(expand("%"), ':p:gs?\\?/?')
     " jump to existing buffer if, 1. we have enabled it, 2. the buffer is loaded
     " and 3. there is buffer window number we switch to
-    if go#config#DefReuseBuffer() && bufloaded(filename) != 0 && bufwinnr(filename) != -1
-      " jumpt to existing buffer if it exists
-      execute bufwinnr(filename) . 'wincmd w'
+    if go#config#DefReuseBuffer() && bufwinnr(filename) != -1
+      " jump to existing buffer if it exists
+      call win_gotoid(bufwinnr(filename))
     else
       if &modified
         let cmd = 'hide edit'
@@ -186,7 +191,13 @@ function! go#def#jump_to_declaration(out, mode, bin_name) abort
       endif
 
       " open the file and jump to line and column
-      exec cmd fnameescape(fnamemodify(filename, ':.'))
+      try
+        exec cmd fnameescape(fnamemodify(filename, ':.'))
+      catch
+        if stridx(v:exception, ':E325:') < 0
+          call go#util#EchoError(v:exception)
+        endif
+      endtry
     endif
   endif
   call cursor(line, col)

@@ -1,4 +1,4 @@
-" MIT License. Copyright (c) 2013-2019 Bailey Ling et al.
+" MIT License. Copyright (c) 2013-2020 Bailey Ling et al.
 " vim: et ts=2 sts=2 sw=2
 
 scriptencoding utf-8
@@ -24,15 +24,33 @@ let s:script_path = tolower(resolve(expand('<sfile>:p:h')))
 
 let s:filetype_overrides = {
       \ 'defx':  ['defx', '%{b:defx.paths[0]}'],
+      \ 'fugitive': ['fugitive', '%{airline#util#wrap(airline#extensions#branch#get_head(),80)}'],
       \ 'gundo': [ 'Gundo', '' ],
       \ 'help':  [ 'Help', '%f' ],
       \ 'minibufexpl': [ 'MiniBufExplorer', '' ],
-      \ 'nerdtree': [ get(g:, 'NERDTreeStatusline', 'NERD'), '' ],
       \ 'startify': [ 'startify', '' ],
       \ 'vim-plug': [ 'Plugins', '' ],
       \ 'vimfiler': [ 'vimfiler', '%{vimfiler#get_status_string()}' ],
       \ 'vimshell': ['vimshell','%{vimshell#get_status_string()}'],
+      \ 'vaffle' : [ 'Vaffle', '' ],
       \ }
+
+if airline#util#has_gina() && get(g:, 'airline#extensions#gina_status', 1)
+  " Gina needs the Vim 7.4.1898, which introduce the <mods> flag for custom commands
+  let s:filetype_overrides['gina-status'] = ['gina', '%{gina#component#repo#preset()}' ]
+  let s:filetype_overrides['diff'] = ['gina', '%{gina#component#repo#preset()}' ]
+  let s:filetype_overrides['gina-log'] = ['gina', '%{gina#component#repo#preset()}' ]
+  let s:filetype_overrides['gina-tag'] = ['gina', '%{gina#component#repo#preset()}' ]
+  let s:filetype_overrides['gina-branch'] = ['gina', '%{gina#component#repo#branch()}' ]
+  let s:filetype_overrides['gina-reflog'] = ['gina', '%{gina#component#repo#branch()}' ]
+  let s:filetype_overrides['gina-ls'] = ['gina', '%{gina#component#repo#branch()}' ]
+endif
+
+if get(g:, 'airline#extensions#nerdtree_statusline', 1)
+  let s:filetype_overrides['nerdtree'] = [ get(g:, 'NERDTreeStatusline', 'NERD'), '' ]
+else
+  let s:filetype_overrides['nerdtree'] = ['NERDTree', '']
+endif
 
 let s:filetype_regex_overrides = {}
 
@@ -73,7 +91,7 @@ function! airline#extensions#apply(...)
     let w:airline_section_y = ''
   endif
 
-  if &previewwindow
+  if &previewwindow && empty(get(w:, 'airline_section_a', ''))
     let w:airline_section_a = 'Preview'
     let w:airline_section_b = ''
     let w:airline_section_c = bufname(winbufnr(winnr()))
@@ -133,7 +151,9 @@ function! airline#extensions#load()
         call airline#extensions#{ext}#init(s:ext)
       catch /^Vim\%((\a\+)\)\=:E117/	" E117, function does not exist
         call airline#util#warning("Extension '".ext."' not installed, ignoring!")
+        continue
       endtry
+      call add(s:loaded_ext, ext)
     endfor
     return
   endif
@@ -156,7 +176,8 @@ function! airline#extensions#load()
     call add(s:loaded_ext, 'netrw')
   endif
 
-  if has("terminal") || has('nvim')
+  if (has("terminal") || has('nvim')) &&
+        \ get(g:, 'airline#extensions#term#enabled', 1)
     call airline#extensions#term#init(s:ext)
     call add(s:loaded_ext, 'term')
   endif
@@ -213,6 +234,12 @@ function! airline#extensions#load()
     call add(s:loaded_ext, 'tagbar')
   endif
 
+  if get(g:, 'airline#extensions#vista#enabled', 1)
+        \ && exists(':Vista')
+    call airline#extensions#vista#init(s:ext)
+    call add(s:loaded_ext, 'vista')
+  endif
+
   if get(g:, 'airline#extensions#bookmark#enabled', 1)
         \ && exists(':BookmarkToggle')
     call airline#extensions#bookmark#init(s:ext)
@@ -231,6 +258,7 @@ function! airline#extensions#load()
 
   if get(g:, 'airline#extensions#branch#enabled', 1) && (
           \ airline#util#has_fugitive() ||
+          \ airline#util#has_gina() ||
           \ airline#util#has_lawrencium() ||
           \ airline#util#has_vcscommand() ||
           \ airline#util#has_custom_scm())
@@ -251,9 +279,20 @@ function! airline#extensions#load()
     call add(s:loaded_ext, 'fugitiveline')
   endif
 
-  if (get(g:, 'airline#extensions#virtualenv#enabled', 1) && (exists(':VirtualEnvList') || isdirectory($VIRTUAL_ENV)))
+  " NOTE: This means that if both virtualenv and poetv are enabled and
+  " available, poetv silently takes precedence and the virtualenv
+  " extension won't be initialized. Since both extensions currently just
+  " add a virtualenv identifier section to the airline, this seems
+  " acceptable.
+  if (get(g:, 'airline#extensions#poetv#enabled', 1) && (exists(':PoetvActivate')))
+    call airline#extensions#poetv#init(s:ext)
+    call add(s:loaded_ext, 'poetv')
+  elseif (get(g:, 'airline#extensions#virtualenv#enabled', 1) && (exists(':VirtualEnvList')))
     call airline#extensions#virtualenv#init(s:ext)
     call add(s:loaded_ext, 'virtualenv')
+  elseif (isdirectory($VIRTUAL_ENV))
+    call airline#extensions#poetv#init(s:ext)
+    call add(s:loaded_ext, 'poetv')
   endif
 
   if (get(g:, 'airline#extensions#eclim#enabled', 1) && exists(':ProjectCreate'))
@@ -270,6 +309,11 @@ function! airline#extensions#load()
   if (get(g:, 'airline#extensions#ale#enabled', 1) && exists(':ALELint'))
     call airline#extensions#ale#init(s:ext)
     call add(s:loaded_ext, 'ale')
+  endif
+
+  if (get(g:, 'airline#extensions#coc#enabled', 1) && exists(':CocCommand'))
+    call airline#extensions#coc#init(s:ext)
+    call add(s:loaded_ext, 'coc')
   endif
 
   if (get(g:, 'airline#extensions#languageclient#enabled', 1) && exists(':LanguageClientStart'))

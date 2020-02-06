@@ -10,15 +10,53 @@ function! go#lsp#message#Initialize(wd) abort
             \ 'processId': getpid(),
             \ 'rootUri': go#path#ToURI(a:wd),
             \ 'capabilities': {
-              \ 'workspace': {},
+              \ 'workspace': {
+                \ 'workspaceFolders': v:true,
+                \ 'didChangeConfiguration': {
+                  \ 'dynamicRegistration': v:true,
+                \ },
+                \ 'configuration': v:true,
+              \ },
               \ 'textDocument': {
                 \ 'hover': {
                   \ 'contentFormat': ['plaintext'],
                 \ },
+                \ 'completion': {
+                \   'completionItem': {
+                \     'snippetSupport': go#config#GoplsUsePlaceholders() ? v:true : v:false,
+                \   },
+                \ },
               \ }
-            \ }
+            \ },
+            \ 'workspaceFolders': [s:workspaceFolder(0, a:wd)],
           \ }
        \ }
+endfunction
+
+function! go#lsp#message#Initialized() abort
+  return {
+          \ 'notification': 1,
+          \ 'method': 'initialized',
+          \ 'params': {},
+       \ }
+endfunction
+
+function! go#lsp#message#Shutdown() abort
+  return {
+          \ 'notification': 0,
+          \ 'method': 'shutdown',
+       \ }
+endfunction
+
+function! go#lsp#message#Exit() abort
+  return {
+          \ 'notification': 1,
+          \ 'method': 'exit',
+       \ }
+endfunction
+
+function! go#lsp#message#WorkspaceFoldersResult(dirs) abort
+  return map(copy(a:dirs), function('s:workspaceFolder', []))
 endfunction
 
 function! go#lsp#message#Definition(file, line, col) abort
@@ -47,7 +85,7 @@ function! go#lsp#message#TypeDefinition(file, line, col) abort
        \ }
 endfunction
 
-function! go#lsp#message#DidOpen(file, content) abort
+function! go#lsp#message#DidOpen(file, content, version) abort
   return {
           \ 'notification': 1,
           \ 'method': 'textDocument/didOpen',
@@ -56,18 +94,20 @@ function! go#lsp#message#DidOpen(file, content) abort
           \         'uri': go#path#ToURI(a:file),
           \         'languageId': 'go',
           \         'text': a:content,
+          \         'version': a:version,
           \     }
           \ }
        \ }
 endfunction
 
-function! go#lsp#message#DidChange(file, content) abort
+function! go#lsp#message#DidChange(file, content, version) abort
   return {
           \ 'notification': 1,
           \ 'method': 'textDocument/didChange',
           \ 'params': {
           \     'textDocument': {
           \         'uri': go#path#ToURI(a:file),
+          \         'version': a:version,
           \     },
           \     'contentChanges': [
           \       {
@@ -103,6 +143,22 @@ function! go#lsp#message#Completion(file, line, col) abort
        \ }
 endfunction
 
+function! go#lsp#message#References(file, line, col) abort
+  return {
+          \ 'notification': 0,
+          \ 'method': 'textDocument/references',
+          \ 'params': {
+          \   'textDocument': {
+          \       'uri': go#path#ToURI(a:file)
+          \   },
+          \   'position': s:position(a:line, a:col),
+          \   'context': {
+          \       'includeDeclaration': v:true,
+          \   },
+          \ }
+       \ }
+endfunction
+
 function! go#lsp#message#Hover(file, line, col) abort
   return {
           \ 'notification': 0,
@@ -116,8 +172,54 @@ function! go#lsp#message#Hover(file, line, col) abort
        \ }
 endfunction
 
+function! go#lsp#message#ChangeWorkspaceFolders(add, remove) abort
+  let l:addDirs = map(copy(a:add), function('s:workspaceFolder', []))
+  let l:removeDirs = map(copy(a:add), function('s:workspaceFolder', []))
+
+  return {
+          \ 'notification': 1,
+          \ 'method': 'workspace/didChangeWorkspaceFolders',
+          \ 'params': {
+          \   'event': {
+          \     'removed': l:removeDirs,
+          \     'added': l:addDirs,
+          \     },
+          \ }
+       \ }
+
+endfunction
+
+function! go#lsp#message#ConfigurationResult(items) abort
+  let l:result = []
+
+  " results must be in the same order as the items
+  for l:item in a:items
+    let l:config = {
+          \ 'buildFlags': [],
+          \ 'hoverKind': 'NoDocumentation',
+          \ 'deepCompletion': go#config#GoplsDeepCompletion() ? v:true : v:false,
+          \ 'fuzzyMatching': go#config#GoplsFuzzyMatching() ? v:true : v:false,
+          \ 'completeUnimported': go#config#GoplsCompleteUnimported() ? v:true : v:false,
+          \ 'staticcheck': go#config#GoplsStaticCheck() ? v:true : v:false,
+          \ 'usePlaceholders': go#config#GoplsUsePlaceholders() ? v:true : v:false,
+          \ }
+    let l:buildtags = go#config#BuildTags()
+    if buildtags isnot ''
+      let l:config.buildFlags = extend(l:config.buildFlags, ['-tags', go#config#BuildTags()])
+    endif
+
+    let l:result = add(l:result, l:config)
+  endfor
+
+  return l:result
+endfunction
+
+function s:workspaceFolder(key, val) abort
+  return {'uri': go#path#ToURI(a:val), 'name': a:val}
+endfunction
+
 function! s:position(line, col) abort
-  return {'line': a:line - 1, 'character': a:col-1}
+  return {'line': a:line, 'character': a:col}
 endfunction
 
 " restore Vi compatibility settings

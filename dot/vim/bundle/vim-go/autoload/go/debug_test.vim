@@ -10,6 +10,10 @@ function! Test_GoDebugStart_RelativePackage() abort
   call s:debug('./debug/debugmain')
 endfunction
 
+function! Test_GoDebugStart_RelativePackage_NullModule() abort
+  call s:debug('./debug/debugmain', 1)
+endfunction
+
 function! Test_GoDebugStart_Package() abort
   call s:debug('debug/debugmain')
 endfunction
@@ -20,14 +24,15 @@ function! Test_GoDebugStart_Errors() abort
   endif
 
   try
+    let l:tmp = gotest#load_fixture('debug/compilerror/main.go')
+
     let l:expected = [
           \ {'lnum': 0, 'bufnr': 0, 'col': 0, 'valid': 0, 'vcol': 0, 'nr': -1, 'type': '', 'pattern': '', 'text': '# debug/compilerror'},
-          \ {'lnum': 6, 'bufnr': 7, 'col': 22, 'valid': 1, 'vcol': 0, 'nr': -1, 'type': '', 'pattern': '', 'text': ' syntax error: unexpected newline, expecting comma or )'},
+          \ {'lnum': 6, 'bufnr': bufnr('%'), 'col': 22, 'valid': 1, 'vcol': 0, 'nr': -1, 'type': '', 'pattern': '', 'text': ' syntax error: unexpected newline, expecting comma or )'},
           \ {'lnum': 0, 'bufnr': 0, 'col': 0, 'valid': 0, 'vcol': 0, 'nr': -1, 'type': '', 'pattern': '', 'text': 'exit status 2'}
           \]
     call setqflist([], 'r')
 
-    let l:tmp = gotest#load_fixture('debug/compilerror/main.go')
     call assert_false(exists(':GoDebugStop'))
 
     let l:cd = exists('*haslocaldir') && haslocaldir() ? 'lcd' : 'cd'
@@ -52,13 +57,21 @@ function! Test_GoDebugStart_Errors() abort
   endtry
 endfunction
 
+" s:debug takes 2 optional arguments. The first is a package to debug. The
+" second is a flag to indicate whether to reset GOPATH after
+" gotest#load_fixture is called in order to test behavior outside of GOPATH.
 function! s:debug(...) abort
   if !go#util#has_job()
     return
   endif
 
   try
+    let $oldgopath = $GOPATH
     let l:tmp = gotest#load_fixture('debug/debugmain/debugmain.go')
+
+    if a:0 > 1 && a:2 == 1
+      let $GOPATH = $oldgopath
+    endif
 
     call go#debug#Breakpoint(6)
 

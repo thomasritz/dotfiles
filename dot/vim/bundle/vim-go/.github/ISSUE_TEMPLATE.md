@@ -6,9 +6,7 @@ If possible, please provide clear steps for reproducing the problem.
 
 ### What did you expect to happen?
 
-
 ### What happened instead?
-
 
 ### Configuration (**MUST** fill this out):
 
@@ -20,10 +18,19 @@ If possible, please provide clear steps for reproducing the problem.
 </pre></details>
 
 #### Vim version (first three lines from `:version`):
+<!-- :version -->
 
-####  Go version (`go version`):
+#### Go version (`go version`):
+<!-- go version -->
 
 #### Go environment
 <details><summary><code>go env</code> Output:</summary><br><pre>
+<!-- go env -->
+
+</pre></details>
+
+#### gopls version
+<details><summary><code>gopls version</code> Output:</summary><br><pre>
+<!-- gopls version -->
 
 </pre></details>
