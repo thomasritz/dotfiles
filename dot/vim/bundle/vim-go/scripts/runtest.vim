@@ -20,6 +20,7 @@ if !exists('g:test_verbose')
   let g:test_verbose = 0
 endif
 let g:go_echo_command_info = 0
+let g:go_gopls_options = []
 
 function! s:logmessages() abort
   " Add all messages (usually errors).
@@ -81,8 +82,12 @@ for s:test in sort(s:tests)
   " Restore the working directory after each test.
   execute s:cd . s:dir
 
-  " exit gopls after each test
-  call go#lsp#Exit()
+  try
+    " exit gopls after each test
+    call go#lsp#Exit()
+  catch /^Vim(call):E900: Invalid channel id/
+    " do nothing - gopls has stopped
+  endtry
 
   let s:done += 1
 

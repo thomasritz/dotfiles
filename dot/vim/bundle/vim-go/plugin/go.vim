@@ -12,19 +12,19 @@ function! s:checkVersion() abort
   let l:unsupported = 0
   if go#config#VersionWarning() != 0
     if has('nvim')
-      let l:unsupported = !has('nvim-0.3.2')
+      let l:unsupported = !has('nvim-0.4.0')
     else
       let l:unsupported = !has('patch-8.0.1453')
     endif
 
     if l:unsupported == 1
       echohl Error
-      echom "vim-go requires at least Vim 8.0.1453 or Neovim 0.3.2, but you're using an older version."
+      echom "vim-go requires at least Vim 8.0.1453 or Neovim 0.4.0, but you're using an older version."
       echom "Please update your Vim for the best vim-go experience."
       echom "If you really want to continue you can set this to make the error go away:"
       echom "    let g:go_version_warning = 0"
       echom "Note that some features may error out or behave incorrectly."
-      echom "Please do not report bugs unless you're using at least Vim 8.0.1453 or Neovim 0.3.2."
+      echom "Please do not report bugs unless you're using at least Vim 8.0.1453 or Neovim 0.4.0."
       echohl None
 
       " Make sure people see this.
@@ -38,15 +38,13 @@ call s:checkVersion()
 " these packages are used by vim-go and can be automatically installed if
 " needed by the user with GoInstallBinaries.
 
-" NOTE(bc): varying the binary name and the tail of the import path (e.g.
-" gocode-gomod) does not yet work in module aware mode.
+" NOTE(bc): varying the binary name and the tail of the import path does not yet work in module aware mode.
 let s:packages = {
       \ 'asmfmt':        ['github.com/klauspost/asmfmt/cmd/asmfmt@master'],
       \ 'dlv':           ['github.com/go-delve/delve/cmd/dlv@master'],
       \ 'errcheck':      ['github.com/kisielk/errcheck@master'],
       \ 'fillstruct':    ['github.com/davidrjenni/reftools/cmd/fillstruct@master'],
       \ 'godef':         ['github.com/rogpeppe/godef@master'],
-      \ 'gogetdoc':      ['github.com/zmb3/gogetdoc@master'],
       \ 'goimports':     ['golang.org/x/tools/cmd/goimports@master'],
       \ 'golint':        ['golang.org/x/lint/golint@master'],
       \ 'gopls':         ['golang.org/x/tools/gopls@latest', {}, {'after': function('go#lsp#Restart', [])}],
@@ -87,6 +85,10 @@ function! s:GoInstallBinaries(updateBinaries, ...)
   endif
 
   let go_bin_path = go#path#BinPath()
+
+  let [l:goos, l:goarch] = go#util#hostosarch()
+  let Restore_goos = go#util#SetEnv('GOOS', l:goos)
+  let Restore_goarch = go#util#SetEnv('GOARCH', l:goarch)
 
   " change $GOBIN so go get can automatically install to it
   let Restore_gobin = go#util#SetEnv('GOBIN', go_bin_path)
@@ -220,6 +222,8 @@ function! s:GoInstallBinaries(updateBinaries, ...)
   " restore back!
   call call(Restore_path, [])
   call call(Restore_gobin, [])
+  call call(Restore_goarch, [])
+  call call(Restore_goos, [])
 
   if resetshellslash
     set shellslash

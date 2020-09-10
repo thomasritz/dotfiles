@@ -9,6 +9,13 @@ else
   let s:sign_delete = ' '
 endif
 
+" Support for sign priority was added together with sign_place().
+if exists('*sign_place')
+  let s:sign_priority = printf('priority=%d', get(g:, 'signify_priority', 10))
+else
+  let s:sign_priority = ''
+endif
+
 let s:sign_show_count  = get(g:, 'signify_sign_show_count', 1)
 let s:delete_highlight = ['', 'SignifyLineDelete']
 " 1}}}
@@ -152,10 +159,10 @@ endfunction
 
 " #remove_all_signs {{{1
 function! sy#sign#remove_all_signs(bufnr) abort
-  let sy = getbufvar(a:bufnr, 'sy')
+  let sy = getbufvar(a:bufnr, 'sy', {})
 
-  for hunk in sy.hunks
-    for id in hunk.ids
+  for hunk in get(sy, 'hunks', [])
+    for id in get(hunk, 'ids', [])
       execute 'sign unplace' id 'buffer='.a:bufnr
     endfor
   endfor
@@ -229,10 +236,11 @@ function! s:add_sign(sy, line, type, ...) abort
           \ a:1,
           \ s:delete_highlight[g:signify_line_highlight])
   endif
-  execute printf('sign place %d line=%d name=%s buffer=%s',
+  execute printf('sign place %d line=%d name=%s %s buffer=%s',
         \ id,
         \ a:line,
         \ a:type,
+        \ s:sign_priority,
         \ a:sy.buffer)
 
   return id
@@ -240,6 +248,12 @@ endfunction
 
 " s:external_sign_present {{{1
 function! s:external_sign_present(sy, line) abort
+  " If sign priority is supported, so are multiple signs per line.
+  " Therefore, we can report no external signs present and let
+  " g:signify_priority control whether Sy's signs are shown.
+  if !empty(s:sign_priority)
+    return
+  endif
   if has_key(a:sy.external, a:line)
     if has_key(a:sy.internal, a:line)
       " Remove Sy signs from lines with other signs.

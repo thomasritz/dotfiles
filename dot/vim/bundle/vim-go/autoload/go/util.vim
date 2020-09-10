@@ -120,8 +120,16 @@ function! go#util#gomod() abort
   return substitute(s:exec(['go', 'env', 'GOMOD'])[0], '\n', '', 'g')
 endfunction
 
-function! go#util#osarch() abort
-  return go#util#env("goos") . '_' . go#util#env("goarch")
+" gomodcache returns 'go env GOMODCACHE'. Instead use 'go#util#env("gomodcache")'
+function! go#util#gomodcache() abort
+  return substitute(s:exec(['go', 'env', 'GOMODCACHE'])[0], '\n', '', 'g')
+endfunction
+
+" hostosarch returns the OS and ARCH values that the go binary is intended for.
+function! go#util#hostosarch() abort
+  let [l:hostos, l:err] = s:exec(['go', 'env', 'GOHOSTOS'])
+  let [l:hostarch, l:err] = s:exec(['go', 'env', 'GOHOSTARCH'])
+  return [substitute(l:hostos, '\n', '', 'g'), substitute(l:hostarch, '\n', '', 'g')]
 endfunction
 
 " go#util#ModuleRoot returns the root directory of the module of the current
@@ -144,7 +152,7 @@ function! go#util#ModuleRoot() abort
     return expand('%:p:h')
   endif
 
-  return fnamemodify(l:module, ':p:h')
+  return resolve(fnamemodify(l:module, ':p:h'))
 endfunction
 
 " Run a shell command.
@@ -160,6 +168,13 @@ function! s:system(cmd, ...) abort
 
   if !go#util#IsWin() && executable('/bin/sh')
       set shell=/bin/sh shellredir=>%s\ 2>&1 shellcmdflag=-c
+  endif
+
+  if go#util#IsWin()
+    if executable($COMSPEC)
+      let &shell = $COMSPEC
+      set shellcmdflag=/C
+    endif
   endif
 
   try
@@ -201,18 +216,25 @@ function! go#util#Exec(cmd, ...) abort
   return call('s:exec', [[l:bin] + a:cmd[1:]] + a:000)
 endfunction
 
+" ExecInDir will execute cmd with the working directory set to the current
+" buffer's directory.
 function! go#util#ExecInDir(cmd, ...) abort
-  if !isdirectory(expand("%:p:h"))
+  let l:wd = expand('%:p:h')
+  return call('go#util#ExecInWorkDir', [a:cmd, l:wd] + a:000)
+endfunction
+
+" ExecInWorkDir will execute cmd with the working diretory set to wd. Additional arguments will be passed
+" to cmd.
+function! go#util#ExecInWorkDir(cmd, wd, ...) abort
+  if !isdirectory(a:wd)
     return ['', 1]
   endif
 
-  let cd = exists('*haslocaldir') && haslocaldir() ? 'lcd ' : 'cd '
-  let dir = getcwd()
+  let l:dir = go#util#Chdir(a:wd)
   try
-    execute cd . fnameescape(expand("%:p:h"))
     let [l:out, l:err] = call('go#util#Exec', [a:cmd] + a:000)
   finally
-    execute cd . fnameescape(l:dir)
+    call go#util#Chdir(l:dir)
   endtry
   return [l:out, l:err]
 endfunction
@@ -552,7 +574,7 @@ function! go#util#SetEnv(name, value) abort
 endfunction
 
 function! go#util#ClearHighlights(group) abort
-  if exists('*prop_remove')
+  if has('textprop')
     " the property type may not exist when syntax highlighting is not enabled.
     if empty(prop_type_get(a:group))
       return
@@ -610,12 +632,11 @@ endfunction
 " pos should be a list of 3 element lists. The lists should be [line, col,
 " length] as used by matchaddpos().
 function! go#util#HighlightPositions(group, pos) abort
-  if exists('*prop_add')
+  if has('textprop')
     for l:pos in a:pos
       " use a single line prop by default
       let l:prop = {'type': a:group, 'length': l:pos[2]}
 
-      " specify end line and column if needed.
       let l:line = getline(l:pos[0])
 
       " l:max is the 1-based index within the buffer of the first character after l:pos.
@@ -625,6 +646,7 @@ function! go#util#HighlightPositions(group, pos) abort
         " https://github.com/vim/vim/issues/5334) is available.
         let l:end_lnum = byte2line(l:max)
 
+        " specify end line and column if needed.
         if l:pos[0] != l:end_lnum
           let l:end_col = l:max - line2byte(l:end_lnum)
           let l:prop = {'type': a:group, 'end_lnum': l:end_lnum, 'end_col': l:end_col}
@@ -641,7 +663,14 @@ function! go#util#HighlightPositions(group, pos) abort
         let l:end_col = l:max - line2byte(l:end_lnum) + l:end_lnum - l:pos[0]
         let l:prop = {'type': a:group, 'end_lnum': l:end_lnum, 'end_col': l:end_col}
       endif
-      call prop_add(l:pos[0], l:pos[1], l:prop)
+      try
+        call prop_add(l:pos[0], l:pos[1], l:prop)
+      catch
+        " Swallow any exceptions encountered while trying to add the property
+        " Due to the asynchronous nature, it's possible that the buffer has
+        " changed since the buffer was analyzed and that the specified
+        " position is no longer valid.
+      endtry
     endfor
     return
   endif
@@ -650,7 +679,6 @@ function! go#util#HighlightPositions(group, pos) abort
     return s:matchaddpos(a:group, a:pos)
   endif
 endfunction
-
 
 " s:matchaddpos works around matchaddpos()'s limit of only 8 positions per
 " call by calling matchaddpos() with no more than 8 positions per call.
@@ -670,6 +698,16 @@ function! s:matchaddpos(group, pos) abort
   for l:positions in l:partitions
     call matchaddpos(a:group, l:positions)
   endfor
+endfunction
+
+function! go#util#Chdir(dir) abort
+  if !exists('*chdir')
+    let l:olddir = getcwd()
+    let cd = exists('*haslocaldir') && haslocaldir() ? 'lcd ' : 'cd '
+    execute cd . fnameescape(a:dir)
+    return l:olddir
+  endif
+  return chdir(a:dir)
 endfunction
 
 " restore Vi compatibility settings

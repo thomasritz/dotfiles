@@ -93,7 +93,8 @@ endfunction
 
 " #return_if_no_changes {{{1
 function! sy#util#return_if_no_changes() abort
-  if !exists('b:sy') || empty(b:sy.hunks)
+  let sy = getbufvar(bufnr(''), 'sy')
+  if empty(sy) || empty(sy.hunks)
     echomsg 'signify: There are no changes.'
     return 'return'
   endif
@@ -153,7 +154,7 @@ function! sy#util#popup_create(hunkdiff) abort
           \ 'height': height,
           \ })
     call nvim_win_set_option(s:popup_window, 'cursorline', v:false)
-    call nvim_win_set_option(s:popup_window, 'foldcolumn', 0)
+    call nvim_win_set_option(s:popup_window, 'foldcolumn', has('nvim-0.5') ? '0' : 0)
     call nvim_win_set_option(s:popup_window, 'foldenable', v:false)
     call nvim_win_set_option(s:popup_window, 'number', v:false)
     call nvim_win_set_option(s:popup_window, 'relativenumber', v:false)

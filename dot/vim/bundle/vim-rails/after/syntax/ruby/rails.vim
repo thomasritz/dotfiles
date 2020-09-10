@@ -52,7 +52,7 @@ endif
 
 if s:path =~# '/app/helpers/.*_helper\.rb$\|/app/views/'
   syn keyword rubyViewHelper
-        \ action_name asset_pack_path asset_path asset_url atom_feed audio_path audio_tag audio_url auto_discovery_link_tag
+        \ action_cable_meta_tag action_name asset_pack_path asset_path asset_url atom_feed audio_path audio_tag audio_url auto_discovery_link_tag
         \ button_tag button_to
         \ cache cache_fragment_name cache_if cache_unless capture cdata_section check_box check_box_tag collection_check_boxes collection_radio_buttons collection_select color_field color_field_tag compute_asset_extname compute_asset_host compute_asset_path concat content_tag content_tag_for controller controller_name controller_path convert_to_model cookies csp_meta_tag csrf_meta_tag csrf_meta_tags current_cycle cycle
         \ date_field date_field_tag date_select datetime_field datetime_field_tag datetime_local_field datetime_local_field_tag datetime_select debug distance_of_time_in_words distance_of_time_in_words_to_now div_for dom_class dom_id
@@ -117,6 +117,7 @@ endif
 
 if s:path =~# '/db/migrate/.*\.rb$\|/db/schema\.rb$'
   syn keyword rubySchema create_table change_table drop_table rename_table create_join_table drop_join_table
+  syn keyword rubySchema create_schema drop_schema
   syn keyword rubySchema add_column rename_column change_column change_column_default change_column_null remove_column remove_columns
   syn keyword rubySchema add_foreign_key remove_foreign_key
   syn keyword rubySchema add_timestamps remove_timestamps
@@ -179,7 +180,7 @@ if rails#buffer().type_name('test')
   syn keyword rubyAssertion assert_difference assert_no_difference
   syn keyword rubyAssertion assert_changes    assert_no_changes
   syn keyword rubyAssertion assert_emails assert_enqueued_emails assert_no_emails assert_no_enqueued_emails
-  syn keyword rubyTestAction travel travel_to travel_back
+  syn keyword rubyTestAction travel travel_to travel_back freeze_time unfreeze_time
 endif
 if rails#buffer().type_name('test-controller', 'test-integration', 'test-system')
   syn keyword rubyAssertion assert_response assert_redirected_to assert_template assert_recognizes assert_generates assert_routing
