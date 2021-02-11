@@ -37,6 +37,8 @@ set smartcase           " Override the 'ignorecase' option if the search pattern
 set confirm             " Use confirmation dialogs.
 set encoding=utf-8      " The terminal encoding.
 set fileencodings=ucs-bom,utf-8,default,latin1  " The order of file encodings to try.
+set foldmethod=syntax
+set foldlevel=20
 set shell=/bin/sh       " Always use sh when executing commands with :!
 set wildmenu            " Command-line completion operates in an enhanced mode.
 set wildmode=list:longest,list:full
