@@ -49,7 +49,7 @@ function! go#lint#Gometa(bang, autosave, ...) abort
     redraw
 
     let l:goargs[0] = expand('%:p')
-    if l:metalinter == "golangci-lint"
+    if l:metalinter == 'staticcheck' || l:metalinter == "golangci-lint"
       let l:goargs[0] = expand('%:p:h')
     endif
   endif
@@ -144,15 +144,16 @@ function! go#lint#Diagnostics(bang, ...) abort
 
   let l:listtype = go#list#Type("GoDiagnostics")
 
-  if len(l:messages) == 0
+  " Parse and populate the quickfix list
+  let l:winid = win_getid(winnr())
+  call go#list#ParseFormat(l:listtype, l:errformat, l:messages, 'GoDiagnostics', 0)
+
+  let l:errors = go#list#Get(l:listtype)
+
+  if len(l:errors) == 0
     call go#list#Clean(l:listtype)
     call go#util#EchoSuccess('[diagnostics] PASS')
   else
-    " Parse and populate the quickfix list
-    let l:winid = win_getid(winnr())
-    call go#list#ParseFormat(l:listtype, l:errformat, l:messages, 'GoDiagnostics', 0)
-
-    let errors = go#list#Get(l:listtype)
     call go#list#Window(l:listtype, len(errors))
 
     if a:bang
@@ -394,7 +395,7 @@ function! s:lint_job(metalinter, args, bang, autosave)
 
   if a:autosave
     let l:opts.for = 'GoMetaLinterAutoSave'
-    " s:metalinterautosavecomplete is really only needed for golangci-lint
+    " s:metalinterautosavecomplete is needed for staticcheck and golangci-lint
     let l:opts.complete = funcref('s:metalinterautosavecomplete', [a:metalinter, expand('%:p:t')])
     let l:opts.preserveerrors = funcref('s:preserveerrors', [a:autosave])
   endif
@@ -437,7 +438,7 @@ function! s:golangcilintcmd(bin_path, haslinter)
 endfunction
 
 function! s:metalinterautosavecomplete(metalinter, filepath, job, exit_code, messages)
-  if a:metalinter != 'golangci-lint'
+  if !(a:metalinter == 'golangci-lint' || a:metalinter == 'staticcheck')
     return
   endif
 
@@ -450,7 +451,7 @@ function! s:metalinterautosavecomplete(metalinter, filepath, job, exit_code, mes
     " leave in any messages that report errors about a:filepath or that report
     " more general problems that prevent golangci-lint from linting
     " a:filepath.
-    if l:item =~# '^' . a:filepath . ':' || l:item =~# '^level='
+    if l:item =~# '^' . a:filepath . ':' || (a:metalinter == 'golangci-lint' && l:item =~# '^level=')
       let l:idx += 1
       continue
     endif
@@ -463,11 +464,21 @@ function! s:errorformat(metalinter) abort
     " Golangci-lint can output the following:
     "   <file>:<line>:<column>: <message> (<linter>)
     " This can be defined by the following errorformat:
-    return 'level=%tarning\ msg="%m:\ [%f:%l:%c:\ %.%#]",level=%tarning\ msg="%m",level=%trror\ msg="%m:\ [%f:%l:%c:\ %.%#]",level=%trror\ msg="%m",%f:%l:%c:\ %m,%f:%l\ %m'
+    return 'level=%tarning\ msg="%m:\ [%f:%l:%c:\ %.%#]",level=%tarning\ msg="%m",level=%trror\ msg="%m:\ [%f:%l:%c:\ %.%#]",level=%trror\ msg="%m",%f:%l:%c:\ %m,%f:%l:\ %m,%f:%l\ %m'
   elseif a:metalinter == 'staticcheck'
     return '%f:%l:%c:\ %m'
   elseif a:metalinter == 'gopls'
-    return '%f:%l:%c:%t:\ %m,%f:%l:%c::\ %m,%f:%l::%t:\ %m'
+    let l:efm = ''
+    let l:level = go#config#DiagnosticsLevel()
+
+    if l:level == 0
+      return '%-G%f:%l:%c:%t:\ %m,%-G%f:%l:%c::\ %m,%-G%f:%l::%t:\ %m'
+    endif
+
+    if l:level < 2
+      let l:efm = '%-G%f:%l:%c:W:\ %m,%-G%f:%l::W:\ %m,'
+    endif
+    return l:efm . '%f:%l:%c:%t:\ %m,%f:%l:%c::\ %m,%f:%l::%t:\ %m'
   endif
 endfunction
 

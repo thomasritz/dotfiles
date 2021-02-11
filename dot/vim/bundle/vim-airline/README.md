@@ -1,4 +1,8 @@
-# vim-airline [![Build Status](https://travis-ci.org/vim-airline/vim-airline.svg?branch=master)](https://travis-ci.org/vim-airline/vim-airline) [![Say Thanks!](https://img.shields.io/badge/Say%20Thanks-!-1EAEDB.svg)](https://saythanks.io/to/cb%40256bit.org) [![reviewdog](https://github.com/vim-airline/vim-airline/workflows/reviewdog/badge.svg?branch=master&event=push)](https://github.com/vim-airline/vim-airline/actions?query=workflow%3Areviewdog+event%3Apush+branch%3Amaster)
+# vim-airline 
+
+[![Say Thanks!](https://img.shields.io/badge/Say%20Thanks-!-1EAEDB.svg)](https://saythanks.io/to/cb%40256bit.org)
+[![reviewdog](https://github.com/vim-airline/vim-airline/workflows/reviewdog/badge.svg?branch=master&event=push)](https://github.com/vim-airline/vim-airline/actions?query=workflow%3Areviewdog+event%3Apush+branch%3Amaster)
+[![CI](https://github.com/vim-airline/vim-airline/workflows/CI/badge.svg)](https://github.com/vim-airline/vim-airline/actions?query=workflow%3ACI)
 
 Lean & mean status/tabline for vim that's light as air.
 
@@ -36,7 +40,7 @@ The statusline is the colored line at the bottom, which contains the sections
 section|meaning (example)
 -------|------------------
   A    | displays the mode + additional flags like crypt/spell/paste (INSERT)
-  B    | VCS information - branch, hunk summary (master)
+  B    | Environment status (VCS information - branch, hunk summary (master), [battery][61] level)
   C    | filename + read-only flag (~/.vim/vimrc RO)
   X    | filetype  (vim)
   Y    | file encoding[fileformat] (utf-8[unix])
@@ -66,7 +70,8 @@ For a better look, those sections can be colored differently, depending on vario
    [undotree][17], [nerdtree][18], [tagbar][19], [vim-gitgutter][29],
    [vim-signify][30], [quickfixsigns][39], [syntastic][5], [eclim][34],
    [lawrencium][21], [virtualenv][31], [tmuxline][35], [taboo.vim][37],
-   [ctrlspace][38], [vim-bufmru][47], [vimagit][50], [denite][51] and more.
+   [ctrlspace][38], [vim-bufmru][47], [vimagit][50], [denite][51],
+   [vim.battery][61] and more.
 *  Looks good with regular fonts and provides configuration points so you can use unicode or powerline symbols.
 *  Optimized for speed - loads in under a millisecond.
 *  Extensive suite of themes for popular color schemes including [solarized][23] (dark and light), [tomorrow][24] (all variants), [base16][32] (all variants), [molokai][25], [jellybeans][26] and others.
@@ -191,6 +196,9 @@ vim-airline integrates with a variety of plugins out of the box.  These extensio
 #### [Vim-CMake][60]
 ![image](https://user-images.githubusercontent.com/24732205/87788512-c876a380-c83d-11ea-9ee3-5f639f986a8f.png)
 
+#### [vim.battery][61]
+![image](https://user-images.githubusercontent.com/1969470/94561399-368b0e00-0264-11eb-94a0-f6b67c73d422.png)
+
 ## Extras
 
 vim-airline also supplies some supplementary stand-alone extensions.  In addition to the tabline extension mentioned earlier, there is also:
@@ -289,13 +297,13 @@ A full list of screenshots for various themes can be found in the [Wiki][14].
 
 # Maintainers
 
-The project is currently being maintained by [Bailey Ling][41], [Christian Brabandt][42], and [Mike Hartington][44].
+The project is currently being maintained by [Christian Brabandt][42] and [Bailey Ling][41].
 
 If you are interested in becoming a maintainer (we always welcome more maintainers), please [go here][43].
 
 # License
 
-[MIT License][58]. Copyright (c) 2013-2020 Bailey Ling & Contributors.
+[MIT License][58]. Copyright (c) 2013-2021 Bailey Ling & Contributors.
 
 [1]: https://github.com/Lokaltog/vim-powerline
 [2]: https://github.com/Lokaltog/powerline
@@ -317,7 +325,7 @@ If you are interested in becoming a maintainer (we always welcome more maintaine
 [18]: https://github.com/preservim/nerdtree
 [19]: https://github.com/majutsushi/tagbar
 [20]: https://powerline.readthedocs.org/en/master/installation.html#patched-fonts
-[21]: https://bitbucket.org/ludovicchabant/vim-lawrencium
+[21]: https://github.com/ludovicchabant/vim-lawrencium
 [22]: https://github.com/MarcWeber/vim-addon-manager
 [23]: https://github.com/altercation/solarized
 [24]: https://github.com/chriskempson/tomorrow-theme
@@ -340,7 +348,6 @@ If you are interested in becoming a maintainer (we always welcome more maintaine
 [41]: https://github.com/bling
 [42]: https://github.com/chrisbra
 [43]: https://github.com/vim-airline/vim-airline/wiki/Becoming-a-Maintainer
-[44]: https://github.com/mhartington
 [45]: https://github.com/vim-airline/vim-airline/commit/d7fd8ca649e441b3865551a325b10504cdf0711b
 [46]: https://github.com/vim-airline/vim-airline-themes#vim-airline-themes--
 [47]: https://github.com/mildred/vim-bufmru
@@ -357,3 +364,4 @@ If you are interested in becoming a maintainer (we always welcome more maintaine
 [58]: https://github.com/vim-airline/vim-airline/blob/master/LICENSE
 [59]: https://github.com/neoclide/coc-git
 [60]: https://github.com/cdelledonne/vim-cmake
+[61]: http://github.com/lambdalisue/battery.vim/

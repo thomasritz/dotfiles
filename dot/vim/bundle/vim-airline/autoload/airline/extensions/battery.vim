@@ -1,4 +1,4 @@
-" MIT License. Copyright (c) 2014-2020 Mathias Andersson et al.
+" MIT License. Copyright (c) 2014-2021 Mathias Andersson et al.
 " Plugin: https://github.com/lambdalisue/battery.vim
 " vim: et ts=2 sts=2 sw=2
 
@@ -9,12 +9,15 @@ if !exists('g:loaded_battery')
 endif
 
 function! airline#extensions#battery#status(...) abort
-  if !exists('g:battery#update_statusline') 
+  if !exists('g:battery#update_statusline')
     let g:battery#update_statusline = 1
+    call battery#update()
   endif
-  let w:airline_section_z = '%{battery#component()}'
+
+  let bat = battery#component()
+  return bat
 endfunction
 
 function! airline#extensions#battery#init(ext) abort
-  call a:ext.add_statusline_func('airline#extensions#battery#status')
+  call airline#parts#define_function('battery', 'airline#extensions#battery#status')
 endfunction

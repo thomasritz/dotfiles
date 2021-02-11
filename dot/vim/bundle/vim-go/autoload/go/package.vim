@@ -133,21 +133,47 @@ function! go#package#ImportPath() abort
   return l:importpath
 endfunction
 
+let s:in_gopath = {}
+" InGOPATH returns TRUE when the package of the current buffer is within
+" GOPATH.
+function! go#package#InGOPATH() abort
+  let l:dir = expand("%:p:h")
+  if has_key(s:in_gopath, dir)
+    return s:in_gopath[l:dir][0] !=#  '_'
+  endif
+
+  try
+    " turn off module support so that `go list` will report the package name
+    " with a leading '_' when the current buffer is not within GOPATH.
+    let Restore_modules = go#util#SetEnv('GO111MODULE', 'off')
+    let [l:out, l:err] = go#util#ExecInDir(['go', 'list'])
+    if l:err != 0
+      return 0
+    endif
+
+    let l:importpath = split(l:out, '\n')[0]
+    if len(l:importpath) > 0
+      let s:in_gopath[l:dir] = l:importpath
+    endif
+  finally
+    call call(Restore_modules, [])
+  endtry
+
+  return len(l:importpath) > 0 && l:importpath[0] !=# '_'
+endfunction
+
 " go#package#FromPath returns the import path of arg. -1 is returned when arg
 " does not specify a package. -2 is returned when arg is a relative path
 " outside of GOPATH, not in a module, and not below the current working
 " directory. A relative path is returned when in a null module at or below the
 " current working directory..
 function! go#package#FromPath(arg) abort
-  let l:cd = exists('*haslocaldir') && haslocaldir() ? 'lcd' : 'cd'
-  let l:dir = getcwd()
-
   let l:path = fnamemodify(a:arg, ':p')
   if !isdirectory(l:path)
     let l:path = fnamemodify(l:path, ':h')
   endif
 
-  execute l:cd fnameescape(l:path)
+  let l:dir = go#util#Chdir(l:path)
   try
     if glob("*.go") == ""
       " There's no Go code in this directory. We might be in a module directory
@@ -165,7 +191,7 @@ function! go#package#FromPath(arg) abort
 
     let l:importpath = split(l:out, '\n')[0]
   finally
-    execute l:cd fnameescape(l:dir)
+    call go#util#Chdir(l:dir)
   endtry
 
   " go list returns '_CURRENTDIRECTORY' if the directory is in a null module

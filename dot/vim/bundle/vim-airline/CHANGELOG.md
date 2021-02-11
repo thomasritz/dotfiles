@@ -17,11 +17,13 @@ This is the Changelog for the vim-airline project.
     - [Vim-CMake](https://github.com/cdelledonne/vim-cmake) support
     - [battery.vim](https://github.com/lambdalisue/battery.vim) support
     - [nvim-lspconfig](https://github.com/neovim/nvim-lspconfig) support
+    - [gen_tags.vim](https://github.com/jsfaint/gen_tags.vim) support
 - Improvements
   - git branch can also be displayed using [gina.vim](https://github.com/lambdalisue/gina.vim)
   - coc extensions can also show additional status messages
   - [coc-git](https://github.com/neoclide/coc-git) extension integrated into hunks extension
 - Other
+  - Changed CI from travis-ci.org to GitHub Actions
   - Introduce Vim script static analysis using [reviewdog](https://github.com/reviewdog/action-vint)
   - Added multiple Vim versions to unit tests using Travis CI
   - Added option to show short paths in the status line

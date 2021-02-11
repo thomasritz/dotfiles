@@ -30,11 +30,11 @@ describe 'init sections'
   end
 
   it 'section c should be file and coc_status'
-    Expect g:airline_section_c == '%<%f%m %#__accent_red#%{airline#util#wrap(airline#parts#readonly(),0)}%#__restore__#%#__accent_bold#%#__restore__#'
+    Expect g:airline_section_c == '%<%f%m %#__accent_red#%{airline#util#wrap(airline#parts#readonly(),0)}%#__restore__#%#__accent_bold#%#__restore__#%#__accent_bold#%#__restore__#'
   end
 
   it 'section x should be filetype'
-    Expect g:airline_section_x == '%{airline#util#prepend("",0)}%{airline#util#prepend("",0)}%{airline#util#prepend("",0)}%{airline#util#prepend("",0)}%{airline#util#wrap(airline#parts#filetype(),0)}'
+    Expect g:airline_section_x == '%{airline#util#prepend("",0)}%{airline#util#prepend("",0)}%{airline#util#prepend("",0)}%{airline#util#prepend("",0)}%{airline#util#prepend("",0)}%{airline#util#wrap(airline#parts#filetype(),0)}'
   end
 
   it 'section y should be fenc and ff'
@@ -84,6 +84,7 @@ describe 'init sections'
     Expect airline#parts#get('vista').raw == ''
     Expect airline#parts#get('coc_warning_count').raw == ''
     Expect airline#parts#get('coc_error_count').raw == ''
+    Expect airline#parts#get('battery').raw == ''
   end
 end
 

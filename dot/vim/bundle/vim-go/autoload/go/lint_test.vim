@@ -16,12 +16,13 @@ func! s:gometa(metalinter) abort
 
   try
     let g:go_metalinter_command = a:metalinter
+    let l:vim = s:vimdir()
     let expected = [
-          \ {'lnum': 1, 'bufnr': bufnr('%')+5, 'col': 1, 'valid': 1, 'vcol': 0, 'nr': -1, 'type': '', 'pattern': '', 'text': 'at least one file in a package should have a package comment (ST1000)'}
+          \ {'lnum': 1, 'bufnr': bufnr('%')+9, 'col': 1, 'valid': 1, 'vcol': 0, 'nr': -1, 'type': '', 'pattern': '', 'text': 'at least one file in a package should have a package comment (ST1000)'},
         \ ]
     if a:metalinter == 'golangci-lint'
       let expected = [
-            \ {'lnum': 5, 'bufnr': bufnr('%')+5, 'col': 1, 'valid': 1, 'vcol': 0, 'nr': -1, 'type': '', 'pattern': '', 'text': 'exported function `MissingFooDoc` should have comment or be unexported (golint)'}
+            \ {'lnum': 5, 'bufnr': bufnr('%')+9, 'col': 1, 'valid': 1, 'vcol': 0, 'nr': -1, 'type': '', 'pattern': '', 'text': 'exported function `MissingFooDoc` should have comment or be unexported (golint)'}
           \ ]
     endif
 
@@ -95,6 +96,14 @@ func! Test_GometaAutoSaveStaticcheck() abort
   call s:gometaautosave('staticcheck', 0)
 endfunc
 
+func! Test_GometaAutoSaveGopls() abort
+  let g:go_gopls_staticcheck = 1
+  let g:go_diagnostics_level = 2
+  call s:gometaautosave('gopls', 0)
+  unlet g:go_gopls_staticcheck
+  unlet g:go_diagnostics_level
+endfunc
+
 func! Test_GometaAutoSaveGolangciLintKeepsErrors() abort
   call s:gometaautosave('golangci-lint', 1)
 endfunc
@@ -104,15 +113,19 @@ func! Test_GometaAutoSaveStaticcheckKeepsErrors() abort
 endfunc
 
 func! s:gometaautosave(metalinter, withList) abort
-  let RestoreGOPATH = go#util#SetEnv('GOPATH', fnameescape(fnamemodify(getcwd(), ':p')) . 'test-fixtures/lint')
-  silent exe 'e! ' . $GOPATH . '/src/lint/lint.go'
+  let l:tmp = gotest#load_fixture('lint/src/lint/lint.go')
 
   try
     let g:go_metalinter_command = a:metalinter
+    let l:vim = s:vimdir()
     let l:expected = [
-          \ {'lnum': 1, 'bufnr': bufnr('%'), 'col': 1, 'valid': 1, 'vcol': 0, 'nr': -1, 'type': '', 'pattern': '', 'text': 'at least one file in a package should have a package comment (ST1000)'}
+          \ {'lnum': 1, 'bufnr': bufnr('%'), 'col': 1, 'valid': 1, 'vcol': 0, 'nr': -1, 'type': '', 'pattern': '', 'text': 'at least one file in a package should have a package comment (ST1000)'},
         \ ]
-    if a:metalinter == 'golangci-lint'
+    if a:metalinter == 'gopls'
+      let l:expected = [
+            \ {'lnum': 1, 'bufnr': bufnr('%'), 'col': 1, 'pattern': '', 'valid': 1, 'vcol': 0, 'nr': -1, 'type': 'W', 'module': '', 'text': 'at least one file in a package should have a package comment'}
+          \ ]
+    elseif a:metalinter == 'golangci-lint'
       let l:expected = [
             \ {'lnum': 5, 'bufnr': bufnr('%'), 'col': 1, 'valid': 1, 'vcol': 0, 'nr': -1, 'type': '', 'pattern': '', 'text': 'exported function `MissingDoc` should have comment or be unexported (golint)'}
           \ ]
@@ -145,7 +158,7 @@ func! s:gometaautosave(metalinter, withList) abort
 
     call gotest#assert_quickfix(l:actual, l:expected)
   finally
-    call call(RestoreGOPATH, [])
+    call delete(l:tmp, 'rf')
     unlet g:go_metalinter_autosave_enabled
     unlet g:go_metalinter_command
   endtry
@@ -397,7 +410,7 @@ func! Test_Lint_GOPATH() abort
 
   let expected = [
           \ {'lnum': 5, 'bufnr': bufnr('%'), 'col': 1, 'valid': 1, 'vcol': 0, 'nr': -1, 'type': '', 'pattern': '', 'text': 'exported function MissingDoc should have comment or be unexported'},
-          \ {'lnum': 5, 'bufnr': bufnr('%')+7, 'col': 1, 'valid': 1, 'vcol': 0, 'nr': -1, 'type': '', 'pattern': '', 'text': 'exported function AlsoMissingDoc should have comment or be unexported'}
+          \ {'lnum': 5, 'bufnr': bufnr('%')+11, 'col': 1, 'valid': 1, 'vcol': 0, 'nr': -1, 'type': '', 'pattern': '', 'text': 'exported function AlsoMissingDoc should have comment or be unexported'}
       \ ]
 
   let winnr = winnr()
@@ -425,7 +438,7 @@ func! Test_Lint_NullModule() abort
 
   let expected = [
           \ {'lnum': 5, 'bufnr': bufnr('%'), 'col': 1, 'valid': 1, 'vcol': 0, 'nr': -1, 'type': '', 'pattern': '', 'text': 'exported function MissingDoc should have comment or be unexported'},
-          \ {'lnum': 5, 'bufnr': bufnr('%')+7, 'col': 1, 'valid': 1, 'vcol': 0, 'nr': -1, 'type': '', 'pattern': '', 'text': 'exported function AlsoMissingDoc should have comment or be unexported'}
+          \ {'lnum': 5, 'bufnr': bufnr('%')+11, 'col': 1, 'valid': 1, 'vcol': 0, 'nr': -1, 'type': '', 'pattern': '', 'text': 'exported function AlsoMissingDoc should have comment or be unexported'}
       \ ]
 
   let winnr = winnr()
@@ -507,6 +520,17 @@ func! Test_Errcheck_compilererror() abort
   finally
     call delete(l:tmp, 'rf')
   endtry
+endfunc
+
+func! s:vimdir()
+  let l:vim = "vim-8.2"
+  if has('nvim')
+    let l:vim = 'nvim'
+  elseif v:version == 800
+    let l:vim = 'vim-8.0'
+  endif
+
+  return l:vim
 endfunc
 
 " restore Vi compatibility settings

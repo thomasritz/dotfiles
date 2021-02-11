@@ -1,4 +1,4 @@
-" MIT License. Copyright (c) 2013-2020 Bailey Ling et al.
+" MIT License. Copyright (c) 2013-2021 Bailey Ling et al.
 " vim: et ts=2 sts=2 sw=2
 
 scriptencoding utf-8
@@ -338,7 +338,8 @@ function! airline#extensions#load()
   endif
 
   if (get(g:, 'airline#extensions#nvimlsp#enabled', 1)
-        \ && exists(':LspInstallInfo'))
+        \ && has('nvim')
+        \ && luaeval('vim.lsp ~= nil'))
     call airline#extensions#nvimlsp#init(s:ext)
     call add(s:loaded_ext, 'nvimlsp')
   endif
@@ -406,6 +407,11 @@ function! airline#extensions#load()
   if (get(g:, 'airline#extensions#gutentags#enabled', 1) && get(g:, 'loaded_gutentags', 0))
     call airline#extensions#gutentags#init(s:ext)
     call add(s:loaded_ext, 'gutentags')
+  endif
+
+  if get(g:, 'airline#extensions#gen_tags#enabled', 1) && (get(g:, 'loaded_gentags#gtags', 0) || get(g:, 'loaded_gentags#ctags', 0))
+    call airline#extensions#gen_tags#init(s:ext)
+    call add(s:loaded_ext, 'gen_tags')
   endif
 
   if (get(g:, 'airline#extensions#grepper#enabled', 1) && get(g:, 'loaded_grepper', 0))

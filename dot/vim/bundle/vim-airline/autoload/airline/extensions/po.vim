@@ -1,4 +1,4 @@
-" MIT License. Copyright (c) 2013-2020 Bailey Ling, Christian Brabandt et al.
+" MIT License. Copyright (c) 2013-2021 Bailey Ling, Christian Brabandt et al.
 " vim: et ts=2 sts=2 sw=2
 
 scriptencoding utf-8
@@ -65,8 +65,9 @@ function! airline#extensions#po#stats()
     return b:airline_po_stats
   endif
 
+  " Write stdout to null because we only want to see warnings.
   if g:airline#init#is_windows
-    let cmd = 'msgfmt --statistics -o NUL '
+    let cmd = 'msgfmt --statistics -o /NUL '
   else
     let cmd = 'msgfmt --statistics -o /dev/null -- '
   endif

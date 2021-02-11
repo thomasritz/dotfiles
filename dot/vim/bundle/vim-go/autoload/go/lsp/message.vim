@@ -238,6 +238,29 @@ function! go#lsp#message#References(file, line, col) abort
        \ }
 endfunction
 
+function! go#lsp#message#PrepareCallHierarchy(file, line, col) abort
+  return {
+          \ 'notification': 0,
+          \ 'method': 'textDocument/prepareCallHierarchy',
+          \ 'params': {
+          \   'textDocument': {
+          \       'uri': go#path#ToURI(a:file)
+          \   },
+          \   'position': s:position(a:line, a:col),
+          \ }
+       \ }
+endfunction
+
+function! go#lsp#message#IncomingCalls(item) abort
+  return {
+          \ 'notification': 0,
+          \ 'method': 'callHierarchy/incomingCalls',
+          \ 'params': {
+          \   'item': a:item,
+          \ }
+       \ }
+endfunction
+
 function! go#lsp#message#Hover(file, line, col) abort
   return {
           \ 'notification': 0,
@@ -273,6 +296,7 @@ function! go#lsp#message#ConfigurationResult(items) abort
 
   " results must be in the same order as the items
   for l:item in a:items
+    let l:workspace = go#path#FromURI(l:item.scopeUri)
     let l:config = {
           \ 'buildFlags': [],
           \ 'hoverKind': 'Structured',
@@ -290,6 +314,9 @@ function! go#lsp#message#ConfigurationResult(items) abort
     let l:tempModfile = go#config#GoplsTempModfile()
     let l:analyses = go#config#GoplsAnalyses()
     let l:local = go#config#GoplsLocal()
+    if type(l:local) is v:t_dict
+      let l:local = get(l:local, l:workspace, v:null)
+    endif
     let l:gofumpt = go#config#GoplsGofumpt()
     let l:settings = go#config#GoplsSettings()
 
@@ -342,7 +369,7 @@ function! go#lsp#message#ConfigurationResult(items) abort
     endif
 
     if l:local isnot v:null
-      let l:config.local = l:local
+        let l:config.local = l:local
     endif
 
     if l:gofumpt isnot v:null
@@ -357,13 +384,13 @@ function! go#lsp#message#ConfigurationResult(items) abort
       let l:config = extend(l:config, l:settings, 'keep')
     endif
 
-    let l:result = add(l:result, l:config)
+    let l:result = add(l:result, deepcopy(l:config))
   endfor
 
   return l:result
 endfunction
 
-function go#lsp#message#ExecuteCommand(cmd, args) abort
+function! go#lsp#message#ExecuteCommand(cmd, args) abort
   return {
           \ 'notification': 0,
           \ 'method': 'workspace/executeCommand',
@@ -374,13 +401,13 @@ function go#lsp#message#ExecuteCommand(cmd, args) abort
        \ }
 endfunction
 
-function go#lsp#message#ApplyWorkspaceEditResponse(ok) abort
+function! go#lsp#message#ApplyWorkspaceEditResponse(ok) abort
   return {
           \ 'applied': a:ok,
        \ }
 endfunction
 
-function s:workspaceFolder(key, val) abort
+function! s:workspaceFolder(key, val) abort
   return {'uri': go#path#ToURI(a:val), 'name': a:val}
 endfunction
 
